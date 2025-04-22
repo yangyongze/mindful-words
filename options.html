@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mindful Words - 设置</title>
+  <style>
+    body {
+      width: 400px;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .setting-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #808080;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #666666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mindful Words 设置</h1>
+  
+
+  
+
+  
+  <div class="setting-group">
+    <label for="theme">主题</label>
+    <select id="theme">
+      <option value="light">浅色</option>
+      <option value="dark">深色</option>
+      <option value="system">跟随系统</option>
+
+    </select>
+  </div>
+  
+  <button id="save-settings">保存设置</button>
+  
+  <script src="options.js"></script>
+</body>
+</html>

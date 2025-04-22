@@ -1,0 +1,30 @@
+# 依赖目录
+node_modules/
+
+# 编辑器目录
+.idea/
+.vscode/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 构建产物
+/dist
+/build
+
+# 环境变量文件
+.env
+.env.local
+
+# 测试覆盖率报告
+coverage/
+
+# 调试文件
+*.swp
+*.swo
+
+doc/
