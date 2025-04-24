@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Mindful Words",
-  "version": "1.0.0",
+  "version": "0.8.0",
   "description": "A Chrome extension for saving and organizing web content",
   "permissions": ["activeTab", "storage", "contextMenus"],
   "background": {

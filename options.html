@@ -4,54 +4,138 @@
   <meta charset="UTF-8">
   <title>Mindful Words - 设置</title>
   <style>
-    body {
-      width: 400px;
-      padding: 20px;
-      font-family: Arial, sans-serif;
+    :root {
+      --primary-color: #4285f4;
+      --primary-hover: #3367d6;
+      --text-color: #333333;
+      --bg-color: #ffffff;
+      --border-color: #dddddd;
+      --section-bg: #f5f5f5;
     }
-    .setting-group {
+    
+    body {
+      width: 600px;
+      max-width: 90%;
+      margin: 0 auto;
+      padding: 20px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      line-height: 1.6;
+    }
+    
+    h1 {
+      color: var(--primary-color);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
       margin-bottom: 20px;
     }
+    
+    h2 {
+      margin-top: 30px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .settings-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .setting-group {
+      background-color: var(--section-bg);
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .setting-group h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: var(--primary-color);
+    }
+    
     label {
       display: block;
       margin-bottom: 5px;
-      font-weight: bold;
+      font-weight: 500;
     }
+    
     input, select, textarea {
       width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
+      padding: 8px 10px;
+      margin-bottom: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-family: inherit;
     }
+    
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 12px;
+      padding-right: 30px;
+    }
+    
     button {
-      background-color: #808080;
+      background-color: var(--primary-color);
       color: white;
       padding: 10px 15px;
       border: none;
+      border-radius: 4px;
       cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
     }
+    
     button:hover {
-      background-color: #666666;
+      background-color: var(--primary-hover);
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    
+    #tag-manager {
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
   <h1>Mindful Words 设置</h1>
   
-
-  
-
-  
-  <div class="setting-group">
-    <label for="theme">主题</label>
-    <select id="theme">
-      <option value="light">浅色</option>
-      <option value="dark">深色</option>
-      <option value="system">跟随系统</option>
-
-    </select>
+  <div class="settings-container">
+    <!-- 一般设置 -->
+    <div class="setting-group">
+      <h3>外观设置</h3>
+      <label for="theme">主题</label>
+      <select id="theme">
+        <option value="light">浅色</option>
+        <option value="dark">深色</option>
+        <option value="system">跟随系统</option>
+      </select>
+    </div>
+    
+    <!-- 标签管理 -->
+    <div class="setting-group">
+      <h3>标签管理</h3>
+      <p>管理笔记中使用的标签。您可以添加、编辑或删除标签。</p>
+      <div id="tag-manager">
+        <!-- 标签管理内容将通过JavaScript动态加载 -->
+      </div>
+    </div>
+    
+    <!-- 按钮组 -->
+    <div class="button-group">
+      <button id="save-settings">保存设置</button>
+    </div>
   </div>
-  
-  <button id="save-settings">保存设置</button>
   
   <script src="options.js"></script>
 </body>
