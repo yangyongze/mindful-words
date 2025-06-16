@@ -4,12 +4,23 @@ const PopupManager = {
   elements: {
     notesList: null,
     settingsBtn: null,
-    exportBtn: null
+    exportBtn: null,
+    searchInput: null,
+    clearSearchBtn: null,
+    editModal: null,
+    editContent: null,
+    editTags: null,
+    closeModal: null,
+    cancelEdit: null,
+    saveEdit: null
   },
   
   // 数据存储
   data: {
     notes: [],
+    filteredNotes: [], // 搜索过滤后的笔记
+    currentEditingNote: null, // 当前编辑的笔记
+    searchQuery: '', // 当前搜索关键词
     settings: {
       theme: 'light'
     }
@@ -22,6 +33,7 @@ const PopupManager = {
       this.setupEventListeners();
       this.loadSettings();
       this.loadNotes();
+      this.restoreScrollPosition();
     });
   },
   
@@ -30,6 +42,14 @@ const PopupManager = {
     this.elements.notesList = document.getElementById('notes-list');
     this.elements.settingsBtn = document.getElementById('settings-btn');
     this.elements.exportBtn = document.getElementById('export-btn');
+    this.elements.searchInput = document.getElementById('search-input');
+    this.elements.clearSearchBtn = document.getElementById('clear-search');
+    this.elements.editModal = document.getElementById('edit-modal');
+    this.elements.editContent = document.getElementById('edit-content');
+    this.elements.editTags = document.getElementById('edit-tags');
+    this.elements.closeModal = document.getElementById('close-modal');
+    this.elements.cancelEdit = document.getElementById('cancel-edit');
+    this.elements.saveEdit = document.getElementById('save-edit');
   },
   
   // 设置事件监听器
@@ -56,12 +76,63 @@ const PopupManager = {
         const noteId = parseInt(e.target.dataset.id);
         this.editNoteTags(noteId);
       }
+      // 编辑笔记
+      else if (e.target.classList.contains('edit-note')) {
+        const noteId = parseInt(e.target.dataset.id);
+        this.openEditModal(noteId);
+      }
     });
     
     // 监听主题变更消息
     chrome.runtime.onMessage.addListener((request) => {
       if (request.type === 'update_theme') {
         this.applyTheme(request.theme);
+      }
+    });
+    
+    // 监听滚动事件，保存滚动位置
+    let scrollTimeout;
+    this.elements.notesList.addEventListener('scroll', () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        this.saveScrollPosition();
+      }, 300); // 防抖，300ms后保存
+    });
+    
+    // 搜索功能事件监听
+    this.elements.searchInput.addEventListener('input', (e) => {
+      this.searchNotes(e.target.value);
+    });
+    
+    this.elements.clearSearchBtn.addEventListener('click', () => {
+      this.elements.searchInput.value = '';
+      this.searchNotes('');
+    });
+    
+    // 编辑模态框事件监听
+    this.elements.closeModal.addEventListener('click', () => {
+      this.closeEditModal();
+    });
+    
+    this.elements.cancelEdit.addEventListener('click', () => {
+      this.closeEditModal();
+    });
+    
+    this.elements.saveEdit.addEventListener('click', () => {
+      this.saveNoteEdit();
+    });
+    
+    // 点击模态框背景关闭
+    this.elements.editModal.addEventListener('click', (e) => {
+      if (e.target === this.elements.editModal) {
+        this.closeEditModal();
+      }
+    });
+    
+    // ESC键关闭模态框
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.elements.editModal.style.display === 'block') {
+        this.closeEditModal();
       }
     });
   },
@@ -128,18 +199,21 @@ const PopupManager = {
   renderNotes(notes) {
     if (!this.elements.notesList) return;
     
-    if (!notes || notes.length === 0) {
+    const notesToRender = notes || (this.data.searchQuery ? this.data.filteredNotes : this.data.notes);
+    
+    if (!notesToRender || notesToRender.length === 0) {
+      const message = this.data.searchQuery ? '没有找到匹配的笔记' : '还没有保存任何笔记';
       this.elements.notesList.innerHTML = `
         <div class="hint-text">
-          <p>还没有保存任何笔记</p>
-          <p>在网页上按住Ctrl并选择文本即可保存</p>
+          <p>${message}</p>
+          ${!this.data.searchQuery ? '<p>在网页上按住Ctrl并选择文本即可保存</p>' : ''}
         </div>
       `;
       return;
     }
     
     // 按时间排序，最新的在前面
-    const sortedNotes = [...notes].sort((a, b) => {
+    const sortedNotes = [...notesToRender].sort((a, b) => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
     
@@ -174,6 +248,7 @@ const PopupManager = {
             ${formattedDate} · 
             <a href="${note.url}" target="_blank" class="note-url" title="${note.url}">${displayUrl}</a>
             <span class="spacer"></span>
+            <span class="edit-note" data-id="${note.id}" title="编辑笔记">编辑</span>
             <span class="edit-tags" data-id="${note.id}" title="编辑标签">标签</span>
             <span class="delete-note" data-id="${note.id}" title="删除笔记">删除</span>
           </div>
@@ -518,6 +593,145 @@ const PopupManager = {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 100);
+  },
+  
+  // 保存滚动位置
+  saveScrollPosition() {
+    try {
+      const scrollTop = this.elements.notesList.scrollTop;
+      chrome.storage.local.set({ 'popup_scroll_position': scrollTop });
+    } catch (error) {
+      console.error('保存滚动位置失败:', error);
+    }
+  },
+  
+  // 恢复滚动位置
+  restoreScrollPosition() {
+    try {
+      chrome.storage.local.get(['popup_scroll_position'], (result) => {
+        if (result.popup_scroll_position !== undefined) {
+          // 稍微延迟以确保DOM已渲染
+          setTimeout(() => {
+            this.elements.notesList.scrollTop = result.popup_scroll_position;
+          }, 100);
+        }
+      });
+    } catch (error) {
+      console.error('恢复滚动位置失败:', error);
+    }
+  },
+  
+  // 搜索笔记
+  searchNotes(query) {
+    this.data.searchQuery = query.trim();
+    
+    if (!this.data.searchQuery) {
+      this.data.filteredNotes = [];
+      this.renderNotes();
+      return;
+    }
+    
+    const searchTerm = this.data.searchQuery.toLowerCase();
+    this.data.filteredNotes = this.data.notes.filter(note => {
+      // 搜索内容
+      const contentMatch = note.content.toLowerCase().includes(searchTerm);
+      
+      // 搜索标签
+      const tagsMatch = note.tags && note.tags.some(tag => 
+        tag.toLowerCase().includes(searchTerm)
+      );
+      
+      // 搜索URL
+      const urlMatch = note.url && note.url.toLowerCase().includes(searchTerm);
+      
+      return contentMatch || tagsMatch || urlMatch;
+    });
+    
+    this.renderNotes();
+  },
+  
+  // 打开编辑模态框
+  openEditModal(noteId) {
+    const note = this.data.notes.find(n => n.id === noteId);
+    if (!note) {
+      console.error('找不到要编辑的笔记');
+      return;
+    }
+    
+    this.data.currentEditingNote = note;
+    this.elements.editContent.value = note.content;
+    this.elements.editTags.value = note.tags ? note.tags.join(', ') : '';
+    this.elements.editModal.style.display = 'block';
+    
+    // 聚焦到内容输入框
+    setTimeout(() => {
+      this.elements.editContent.focus();
+    }, 100);
+  },
+  
+  // 关闭编辑模态框
+  closeEditModal() {
+    this.elements.editModal.style.display = 'none';
+    this.data.currentEditingNote = null;
+    this.elements.editContent.value = '';
+    this.elements.editTags.value = '';
+  },
+  
+  // 保存笔记编辑
+  saveNoteEdit() {
+    if (!this.data.currentEditingNote) {
+      console.error('没有正在编辑的笔记');
+      return;
+    }
+    
+    const content = this.elements.editContent.value.trim();
+    if (!content) {
+      alert('笔记内容不能为空');
+      return;
+    }
+    
+    const tagsInput = this.elements.editTags.value.trim();
+    const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+    
+    // 更新笔记
+    const updatedNote = {
+      ...this.data.currentEditingNote,
+      content: content,
+      tags: tags,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // 发送更新消息到background
+    chrome.runtime.sendMessage({
+      type: 'update_note',
+      id: this.data.currentEditingNote.id,
+      noteData: updatedNote
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error('更新笔记失败:', chrome.runtime.lastError);
+        alert('更新笔记失败，请重试');
+        return;
+      }
+      
+      if (response && response.status === 'success') {
+        // 更新本地数据
+        const noteIndex = this.data.notes.findIndex(n => n.id === this.data.currentEditingNote.id);
+        if (noteIndex !== -1) {
+          this.data.notes[noteIndex] = updatedNote;
+        }
+        
+        // 如果有搜索，更新过滤结果
+        if (this.data.searchQuery) {
+          this.searchNotes(this.data.searchQuery);
+        } else {
+          this.renderNotes();
+        }
+        
+        this.closeEditModal();
+      } else {
+        alert('更新笔记失败，请重试');
+      }
+    });
   }
 };
 

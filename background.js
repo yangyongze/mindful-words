@@ -86,6 +86,8 @@ async function handleMessage(request, sender) {
       return updateTheme(request.theme);
     case 'update_tags':
       return updateNoteTags(request.id, request.tags);
+    case 'update_note':
+      return updateNote(request.id, request.noteData);
     case 'save_note':
       return saveNote(request);
     default:
@@ -153,6 +155,37 @@ async function updateNoteTags(noteId, tags) {
     return { status: 'success' };
   } catch (error) {
     console.error('更新笔记标签失败:', error);
+    throw error;
+  }
+}
+
+// 更新笔记内容
+async function updateNote(noteId, noteData) {
+  try {
+    // 首先从存储中加载最新的笔记数据
+    const latestNotes = await storageAPI.loadData('notes') || [];
+    
+    // 确保我们操作的是数组
+    notes = Array.isArray(latestNotes) ? latestNotes : [];
+    
+    const noteIndex = notes.findIndex(note => note.id === noteId);
+    if (noteIndex === -1) {
+      throw new Error('未找到要更新的笔记');
+    }
+    
+    // 更新笔记数据
+    notes[noteIndex] = {
+      ...notes[noteIndex],
+      ...noteData,
+      id: noteId, // 确保ID不被覆盖
+      updatedAt: new Date().toISOString()
+    };
+    
+    await storageAPI.saveData('notes', notes);
+    console.log(`已更新笔记，笔记ID: ${noteId}`);
+    return { status: 'success' };
+  } catch (error) {
+    console.error('更新笔记失败:', error);
     throw error;
   }
 }
