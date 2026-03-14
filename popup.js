@@ -221,10 +221,8 @@ const PopupManager = {
     
     let html = '';
     sortedNotes.forEach(note => {
-      // 格式化日期为 YYYY-MM-DD
       const formattedDate = this.formatDate(note.createdAt);
       
-      // 处理标签显示
       let tagsHtml = '';
       if (note.tags && note.tags.length > 0) {
         tagsHtml = `<div class="note-tags">
@@ -232,7 +230,11 @@ const PopupManager = {
         </div>`;
       }
       
-      // 精简网址显示，只保留域名部分
+      let noteHtml = '';
+      if (note.note && note.note.trim()) {
+        noteHtml = `<div class="note-personal-note">${this.formatContent(note.note)}</div>`;
+      }
+      
       let displayUrl = '';
       try {
         const url = new URL(note.url);
@@ -241,10 +243,10 @@ const PopupManager = {
         displayUrl = '网页';
       }
       
-      // 构建笔记HTML
       html += `
         <div class="note-item" data-id="${note.id}">
           <div class="note-content">${this.formatContent(note.content)}</div>
+          ${noteHtml}
           ${tagsHtml}
           <div class="note-meta">
             ${formattedDate} · 
