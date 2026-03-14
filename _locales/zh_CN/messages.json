@@ -1,0 +1,684 @@
+{
+  "extName": {
+    "message": "Mindful Words",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "are seeds, action makes them grow. Try, fail, learn, then you'll truly know.",
+    "description": "Extension description shown in header"
+  },
+  "searchPlaceholder": {
+    "message": "搜索笔记...",
+    "description": "Search input placeholder"
+  },
+  "btnSettings": {
+    "message": "设置",
+    "description": "Settings button title"
+  },
+  "btnSelect": {
+    "message": "选择笔记",
+    "description": "Select button title"
+  },
+  "btnCopy": {
+    "message": "复制",
+    "description": "Copy button"
+  },
+  "btnExport": {
+    "message": "导出",
+    "description": "Export button"
+  },
+  "btnDelete": {
+    "message": "删除",
+    "description": "Delete button"
+  },
+  "btnCancel": {
+    "message": "取消",
+    "description": "Cancel button"
+  },
+  "btnSave": {
+    "message": "保存",
+    "description": "Save button"
+  },
+  "selectAll": {
+    "message": "全选",
+    "description": "Select all checkbox label"
+  },
+  "selectedCount": {
+    "message": "已选择 $COUNT$ 条",
+    "description": "Selection count",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "noNotes": {
+    "message": "还没有保存任何笔记",
+    "description": "Empty state title"
+  },
+  "noNotesHint": {
+    "message": "在网页上按住 Ctrl 并选择文本即可保存",
+    "description": "Empty state hint"
+  },
+  "noMatchingNotes": {
+    "message": "没有找到匹配的笔记",
+    "description": "Search empty state"
+  },
+  "tryOtherKeywords": {
+    "message": "尝试其他关键词",
+    "description": "Search empty state hint"
+  },
+  "noFilteredNotes": {
+    "message": "没有符合筛选条件的笔记",
+    "description": "Filter empty state"
+  },
+  "adjustFilters": {
+    "message": "尝试调整筛选条件",
+    "description": "Filter empty state hint"
+  },
+  "deleteNote": {
+    "message": "删除笔记",
+    "description": "Delete note button title"
+  },
+  "confirmDelete": {
+    "message": "删除笔记",
+    "description": "Confirm dialog title"
+  },
+  "confirmDeleteMessage": {
+    "message": "确定要删除这条笔记吗？",
+    "description": "Confirm delete message"
+  },
+  "confirmBatchDeleteMessage": {
+    "message": "确定要删除选中的 $COUNT$ 条笔记吗？此操作不可撤销。",
+    "description": "Batch delete confirmation",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "confirm": {
+    "message": "确定",
+    "description": "Confirm button"
+  },
+  "editNote": {
+    "message": "编辑笔记",
+    "description": "Edit modal title"
+  },
+  "contentLabel": {
+    "message": "内容:",
+    "description": "Content input label"
+  },
+  "contentPlaceholder": {
+    "message": "输入笔记内容...",
+    "description": "Content input placeholder"
+  },
+  "personalNoteLabel": {
+    "message": "个人笔记:",
+    "description": "Personal note input label"
+  },
+  "personalNotePlaceholder": {
+    "message": "添加你的想法或备注...",
+    "description": "Personal note input placeholder"
+  },
+  "tagsLabel": {
+    "message": "标签:",
+    "description": "Tags input label"
+  },
+  "tagsPlaceholder": {
+    "message": "输入标签，用逗号分隔...",
+    "description": "Tags input placeholder"
+  },
+  "editTags": {
+    "message": "编辑标签",
+    "description": "Tags modal title"
+  },
+  "tagsInputPlaceholder": {
+    "message": "输入标签...",
+    "description": "Tags input placeholder in modal"
+  },
+  "filterTags": {
+    "message": "标签",
+    "description": "Filter by tags button"
+  },
+  "filterTime": {
+    "message": "时间",
+    "description": "Filter by time button"
+  },
+  "filterSource": {
+    "message": "来源",
+    "description": "Filter by source button"
+  },
+  "clearFilters": {
+    "message": "清除筛选",
+    "description": "Clear all filters button"
+  },
+  "selectTags": {
+    "message": "选择标签",
+    "description": "Tags dropdown header"
+  },
+  "noTags": {
+    "message": "暂无标签",
+    "description": "Empty tags message"
+  },
+  "selectTimeRange": {
+    "message": "选择时间范围",
+    "description": "Time dropdown header"
+  },
+  "today": {
+    "message": "今天",
+    "description": "Time filter option"
+  },
+  "yesterday": {
+    "message": "昨天",
+    "description": "Time filter option"
+  },
+  "thisWeek": {
+    "message": "本周",
+    "description": "Time filter option"
+  },
+  "thisMonth": {
+    "message": "本月",
+    "description": "Time filter option"
+  },
+  "last7Days": {
+    "message": "最近7天",
+    "description": "Time filter option"
+  },
+  "last30Days": {
+    "message": "最近30天",
+    "description": "Time filter option"
+  },
+  "custom": {
+    "message": "自定义",
+    "description": "Custom time range option"
+  },
+  "startDate": {
+    "message": "开始日期",
+    "description": "Start date label"
+  },
+  "endDate": {
+    "message": "结束日期",
+    "description": "End date label"
+  },
+  "selectSource": {
+    "message": "选择来源",
+    "description": "Source dropdown header"
+  },
+  "noSources": {
+    "message": "暂无来源",
+    "description": "Empty sources message"
+  },
+  "exportOptions": {
+    "message": "导出选项",
+    "description": "Export menu header"
+  },
+  "exportAI": {
+    "message": "AI 练习模式",
+    "description": "AI export option"
+  },
+  "exportAIDesc": {
+    "message": "适合粘贴到豆包、千问等 AI 应用",
+    "description": "AI export option description"
+  },
+  "exportJSON": {
+    "message": "JSON 格式",
+    "description": "JSON export option"
+  },
+  "exportJSONDesc": {
+    "message": "导出完整数据结构",
+    "description": "JSON export option description"
+  },
+  "exportCSV": {
+    "message": "CSV 格式",
+    "description": "CSV export option"
+  },
+  "exportCSVDesc": {
+    "message": "适用于电子表格软件",
+    "description": "CSV export option description"
+  },
+  "exportTXT": {
+    "message": "TXT 格式",
+    "description": "TXT export option"
+  },
+  "exportTXTDesc": {
+    "message": "纯文本，适用于任何环境",
+    "description": "TXT export option description"
+  },
+  "exportAnki": {
+    "message": "Anki (.apkg)",
+    "description": "Anki export option"
+  },
+  "exportAnkiDesc": {
+    "message": "导入 Anki 进行间隔重复学习",
+    "description": "Anki export option description"
+  },
+  "exportAnkiFailed": {
+    "message": "导出 Anki 文件失败，请重试",
+    "description": "Anki export failed toast"
+  },
+  "noteNumber": {
+    "message": "笔记 $NUMBER$",
+    "description": "Note number in export",
+    "placeholders": {
+      "number": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "source": {
+    "message": "来源",
+    "description": "Source label"
+  },
+  "time": {
+    "message": "时间",
+    "description": "Time label"
+  },
+  "copiedToClipboard": {
+    "message": "已复制到剪贴板",
+    "description": "Copy success toast"
+  },
+  "copyFailed": {
+    "message": "复制失败，请重试",
+    "description": "Copy failed toast"
+  },
+  "deleted": {
+    "message": "已删除 $COUNT$ 条笔记",
+    "description": "Delete success toast",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "deleteFailed": {
+    "message": "删除失败，请重试",
+    "description": "Delete failed toast"
+  },
+  "selectNotesFirst": {
+    "message": "请先选择要操作的笔记",
+    "description": "Selection required toast"
+  },
+  "noteNotFound": {
+    "message": "找不到指定笔记",
+    "description": "Note not found error"
+  },
+  "contentCannotBeEmpty": {
+    "message": "笔记内容不能为空",
+    "description": "Validation error"
+  },
+  "updateFailed": {
+    "message": "更新失败，请重试",
+    "description": "Update failed toast"
+  },
+  "newNoteAdded": {
+    "message": "新笔记已添加！",
+    "description": "New note indicator"
+  },
+  "extensionContextInvalid": {
+    "message": "扩展上下文已失效，请刷新页面",
+    "description": "Context error message"
+  },
+  "loadFailed": {
+    "message": "笔记加载失败，请刷新页面",
+    "description": "Load failed message"
+  },
+  "webpage": {
+    "message": "网页",
+    "description": "Default source name"
+  },
+  "personalNote": {
+    "message": "个人笔记",
+    "description": "Personal note label in export"
+  },
+  "settingsTitle": {
+    "message": "设置",
+    "description": "Settings page title"
+  },
+  "appearanceSettings": {
+    "message": "外观",
+    "description": "Appearance nav item"
+  },
+  "tagsManagement": {
+    "message": "标签",
+    "description": "Tags nav item"
+  },
+  "dataManagement": {
+    "message": "数据",
+    "description": "Data nav item"
+  },
+  "about": {
+    "message": "关于",
+    "description": "About nav item"
+  },
+  "appearanceTitle": {
+    "message": "外观设置",
+    "description": "Appearance section title"
+  },
+  "appearanceDesc": {
+    "message": "自定义应用的外观和显示方式",
+    "description": "Appearance section description"
+  },
+  "themeMode": {
+    "message": "主题模式",
+    "description": "Theme mode label"
+  },
+  "themeModeDesc": {
+    "message": "选择浅色或深色主题，或跟随系统设置",
+    "description": "Theme mode description"
+  },
+  "themeLight": {
+    "message": "浅色",
+    "description": "Light theme option"
+  },
+  "themeDark": {
+    "message": "深色",
+    "description": "Dark theme option"
+  },
+  "themeSystem": {
+    "message": "跟随系统",
+    "description": "System theme option"
+  },
+  "languageLabel": {
+    "message": "语言",
+    "description": "Language label"
+  },
+  "languageDesc": {
+    "message": "选择显示语言",
+    "description": "Language description"
+  },
+  "languageEn": {
+    "message": "English",
+    "description": "English language option"
+  },
+  "languageZhCN": {
+    "message": "简体中文",
+    "description": "Chinese language option"
+  },
+  "tagsTitle": {
+    "message": "标签管理",
+    "description": "Tags section title"
+  },
+  "tagsDesc": {
+    "message": "管理笔记中使用的标签",
+    "description": "Tags section description"
+  },
+  "newTagPlaceholder": {
+    "message": "输入新标签名称...",
+    "description": "New tag input placeholder"
+  },
+  "btnAdd": {
+    "message": "添加",
+    "description": "Add button"
+  },
+  "existingTags": {
+    "message": "现有标签",
+    "description": "Existing tags header"
+  },
+  "tagCount": {
+    "message": "$COUNT$ 个",
+    "description": "Tag count",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "noTagsYet": {
+    "message": "暂无标签，添加笔记后会自动生成标签",
+    "description": "Empty tags message"
+  },
+  "dataTitle": {
+    "message": "数据管理",
+    "description": "Data section title"
+  },
+  "dataDesc": {
+    "message": "导出、导入和清理您的数据",
+    "description": "Data section description"
+  },
+  "exportData": {
+    "message": "导出数据",
+    "description": "Export data label"
+  },
+  "exportDataDesc": {
+    "message": "将所有笔记导出为 JSON 文件",
+    "description": "Export data description"
+  },
+  "btnExportAction": {
+    "message": "导出",
+    "description": "Export button action"
+  },
+  "importData": {
+    "message": "导入数据",
+    "description": "Import data label"
+  },
+  "importDataDesc": {
+    "message": "从 JSON 文件导入笔记数据",
+    "description": "Import data description"
+  },
+  "btnImportAction": {
+    "message": "导入",
+    "description": "Import button action"
+  },
+  "clearAllData": {
+    "message": "清除所有数据",
+    "description": "Clear data label"
+  },
+  "clearAllDataDesc": {
+    "message": "删除所有笔记和设置，此操作不可撤销",
+    "description": "Clear data description"
+  },
+  "btnClear": {
+    "message": "清除",
+    "description": "Clear button action"
+  },
+  "storageUsage": {
+    "message": "存储使用情况",
+    "description": "Storage usage label"
+  },
+  "calculating": {
+    "message": "计算中...",
+    "description": "Calculating storage"
+  },
+  "aboutTitle": {
+    "message": "关于",
+    "description": "About section title"
+  },
+  "aboutDesc": {
+    "message": "了解 Mindful Words",
+    "description": "About section description"
+  },
+  "aboutText": {
+    "message": "一款简洁优雅的网页内容收藏工具，帮助您保存和管理有价值的网络内容。",
+    "description": "About description"
+  },
+  "feedback": {
+    "message": "反馈建议",
+    "description": "Feedback link"
+  },
+  "changelog": {
+    "message": "更新日志",
+    "description": "Changelog link"
+  },
+  "privacy": {
+    "message": "隐私政策",
+    "description": "Privacy link"
+  },
+  "usageStats": {
+    "message": "使用统计",
+    "description": "Usage stats title"
+  },
+  "totalNotes": {
+    "message": "笔记总数",
+    "description": "Total notes stat"
+  },
+  "totalTagsStat": {
+    "message": "标签数量",
+    "description": "Total tags stat"
+  },
+  "totalSources": {
+    "message": "来源网站",
+    "description": "Total sources stat"
+  },
+  "saveSettings": {
+    "message": "保存设置",
+    "description": "Save settings button"
+  },
+  "settingsSaved": {
+    "message": "设置已保存",
+    "description": "Settings saved toast"
+  },
+  "settingsSaveFailed": {
+    "message": "设置保存失败，请重试",
+    "description": "Settings save failed toast"
+  },
+  "tagAdded": {
+    "message": "标签已添加",
+    "description": "Tag added toast"
+  },
+  "tagEmpty": {
+    "message": "标签不能为空",
+    "description": "Empty tag error"
+  },
+  "tagExists": {
+    "message": "标签已存在",
+    "description": "Duplicate tag error"
+  },
+  "confirmDeleteTag": {
+    "message": "确定要删除标签 \"$TAG$\" 吗？\n该标签将从所有笔记中移除。",
+    "description": "Delete tag confirmation",
+    "placeholders": {
+      "tag": {
+        "content": "$1",
+        "example": "important"
+      }
+    }
+  },
+  "tagDeleted": {
+    "message": "标签已删除",
+    "description": "Tag deleted toast"
+  },
+  "dataExported": {
+    "message": "数据导出成功",
+    "description": "Export success toast"
+  },
+  "dataExportFailed": {
+    "message": "导出失败，请重试",
+    "description": "Export failed toast"
+  },
+  "invalidDataFormat": {
+    "message": "无效的数据格式",
+    "description": "Import format error"
+  },
+  "importConfirm": {
+    "message": "即将导入 $COUNT$ 条笔记。\n是否与现有数据合并？\n\n点击\"确定\"合并数据\n点击\"取消\"放弃导入",
+    "description": "Import confirmation",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "importCancelled": {
+    "message": "已取消导入操作",
+    "description": "Import cancelled toast"
+  },
+  "importedNotes": {
+    "message": "成功导入 $COUNT$ 条新笔记",
+    "description": "Import success toast",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "importFailed": {
+    "message": "导入失败，请重试",
+    "description": "Import failed toast"
+  },
+  "clearConfirm": {
+    "message": "确定要清除所有数据吗？\n\n此操作将删除所有笔记和设置，且不可撤销！\n\n请输入 \"DELETE\" 确认删除：",
+    "description": "Clear data confirmation"
+  },
+  "clearCancelled": {
+    "message": "已取消清除操作",
+    "description": "Clear cancelled toast"
+  },
+  "allDataCleared": {
+    "message": "所有数据已清除",
+    "description": "Clear success toast"
+  },
+  "clearFailed": {
+    "message": "清除失败，请重试",
+    "description": "Clear failed toast"
+  },
+  "languageChangeNote": {
+    "message": "语言已更改。请刷新页面以完全生效。",
+    "description": "Language change toast"
+  },
+  "saveSuccess": {
+    "message": "笔记保存成功！",
+    "description": "Save success message"
+  },
+  "saveFailed": {
+    "message": "保存笔记失败: $ERROR$",
+    "description": "Save failed message",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Network error"
+      }
+    }
+  },
+  "selectionTooShort": {
+    "message": "选择内容太短，请选择更多文本",
+    "description": "Selection validation"
+  },
+  "contextInvalidWarning": {
+    "message": "扩展已更新。请刷新页面以继续保存笔记。",
+    "description": "Context invalid warning"
+  },
+  "refresh": {
+    "message": "刷新",
+    "description": "Refresh button"
+  },
+  "defaultNote1Content": {
+    "message": "Mindful Words are seeds, action makes them grow. Try, fail, learn, then you'll truly know.",
+    "description": "First default note content"
+  },
+  "defaultNote1Note": {
+    "message": "欢迎使用 Mindful Words！这是你的第一条笔记。你可以为任何保存的内容添加个人笔记。",
+    "description": "First default note personal note"
+  },
+  "defaultNote2Content": {
+    "message": "如何保存内容：在网页上选择任意文本，然后按住 Ctrl + 左键点击即可立即保存。你的笔记将包含内容、来源 URL、时间戳和标签。",
+    "description": "Second default note content"
+  },
+  "defaultNote2Note": {
+    "message": "提示：你也可以使用 Ctrl+Shift+S 快捷键，或右键菜单保存选中的文本。",
+    "description": "Second default note personal note"
+  },
+  "welcomeTag": {
+    "message": "welcome",
+    "description": "Welcome tag"
+  },
+  "inspirationTag": {
+    "message": "inspiration",
+    "description": "Inspiration tag"
+  },
+  "tutorialTag": {
+    "message": "tutorial",
+    "description": "Tutorial tag"
+  },
+  "howToTag": {
+    "message": "how-to",
+    "description": "How-to tag"
+  }
+}

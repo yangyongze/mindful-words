@@ -1,0 +1,28 @@
+{
+  "name": "mindful-words",
+  "version": "1.0.0",
+  "main": "background.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangyongze/mindful-words.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yangyongze/mindful-words/issues"
+  },
+  "homepage": "https://github.com/yangyongze/mindful-words#readme",
+  "description": "",
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "sql.js": "^1.14.1"
+  }
+}

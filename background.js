@@ -1,10 +1,4 @@
-/*
- * 欢迎来到Mindful Words的后台脚本世界！
- * 这里就像一个安静的图书管理员，负责管理你保存的所有笔记。
- * 让我们跟随这段代码，看看它是如何工作的...
- */
 
-// 这里是我们的'书架'，用来存放所有笔记
 let notes = [];
 
 // 统一的存储API，处理所有数据保存和读取操作
@@ -82,6 +76,8 @@ async function handleMessage(request, sender) {
   switch (request.type) {
     case 'delete_note':
       return deleteNote(request.id);
+    case 'delete_notes':
+      return deleteNotes(request.ids);
     case 'update_theme':
       return updateTheme(request.theme);
     case 'update_tags':
@@ -116,6 +112,30 @@ async function deleteNote(noteId) {
     return { status: 'success' };
   } catch (error) {
     console.error('删除笔记失败:', error);
+    throw error;
+  }
+}
+
+// 批量删除笔记
+async function deleteNotes(noteIds) {
+  try {
+    const latestNotes = await storageAPI.loadData('notes') || [];
+    notes = Array.isArray(latestNotes) ? latestNotes : [];
+    
+    const idsSet = new Set(noteIds);
+    const initialLength = notes.length;
+    notes = notes.filter(note => !idsSet.has(note.id));
+    
+    const deletedCount = initialLength - notes.length;
+    if (deletedCount === 0) {
+      throw new Error('未找到要删除的笔记');
+    }
+    
+    await storageAPI.saveData('notes', notes);
+    console.log(`已批量删除 ${deletedCount} 条笔记，当前剩余${notes.length}条笔记`);
+    return { status: 'success', deletedCount };
+  } catch (error) {
+    console.error('批量删除笔记失败:', error);
     throw error;
   }
 }
@@ -229,6 +249,16 @@ async function saveNote(request) {
     await storageAPI.saveData('notes', notes);
     
     console.log(`已保存新笔记，当前共有${notes.length}条笔记`);
+    
+    // Notify popup about the new note
+    try {
+      chrome.runtime.sendMessage({ type: 'note_saved', note: newNote }).catch(() => {
+        // Popup might not be open, ignore error
+      });
+    } catch (e) {
+      // Ignore if popup is not open
+    }
+    
     return { status: 'success', note: newNote };
   } catch (error) {
     console.error('保存笔记失败:', error);
@@ -270,3 +300,97 @@ initialize();
 chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ tabId: tab.id });
 });
+
+// Create context menu for saving selected text
+chrome.runtime.onInstalled.addListener(async (details) => {
+  // Create context menu
+  chrome.contextMenus.create({
+    id: 'save-selection',
+    title: 'Save to Mindful Words',
+    contexts: ['selection']
+  });
+  
+  // Add default notes for new installations
+  if (details.reason === 'install') {
+    await createDefaultNotes();
+  }
+});
+
+async function createDefaultNotes() {
+  try {
+    const existingNotes = await storageAPI.loadData('notes');
+    
+    if (existingNotes && existingNotes.length > 0) {
+      return;
+    }
+    
+    const now = new Date().toISOString();
+    const defaultNotes = [
+      {
+        id: Date.now(),
+        content: chrome.i18n.getMessage('defaultNote1Content'),
+        note: chrome.i18n.getMessage('defaultNote1Note'),
+        title: 'Welcome to Mindful Words',
+        url: 'chrome-extension://mindful-words',
+        createdAt: now,
+        updatedAt: now,
+        tags: [chrome.i18n.getMessage('welcomeTag'), chrome.i18n.getMessage('inspirationTag')]
+      },
+      {
+        id: Date.now() + 1,
+        content: chrome.i18n.getMessage('defaultNote2Content'),
+        note: chrome.i18n.getMessage('defaultNote2Note'),
+        title: 'How to Use Mindful Words',
+        url: 'chrome-extension://mindful-words',
+        createdAt: now,
+        updatedAt: now,
+        tags: [chrome.i18n.getMessage('tutorialTag'), chrome.i18n.getMessage('howToTag')]
+      }
+    ];
+    
+    notes = defaultNotes;
+    await storageAPI.saveData('notes', defaultNotes);
+    console.log('[Mindful Words] Default welcome notes created');
+  } catch (error) {
+    console.error('[Mindful Words] Failed to create default notes:', error);
+  }
+}
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'save-selection' && info.selectionText) {
+    saveNoteFromContextMenu(info.selectionText, tab);
+  }
+});
+
+// Save note from context menu
+async function saveNoteFromContextMenu(selectedText, tab) {
+  try {
+    const latestNotes = await storageAPI.loadData('notes') || [];
+    notes = Array.isArray(latestNotes) ? latestNotes : [];
+    
+    const newNote = {
+      id: Date.now(),
+      content: selectedText.trim(),
+      note: '',
+      title: tab?.title || selectedText.substring(0, 30) + '...',
+      url: tab?.url || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      tags: []
+    };
+    
+    notes.push(newNote);
+    await storageAPI.saveData('notes', notes);
+    
+    console.log(`[Mindful Words] Note saved from context menu, total: ${notes.length}`);
+    
+    // Notify popup about the new note
+    try {
+      chrome.runtime.sendMessage({ type: 'note_saved', note: newNote }).catch(() => {});
+    } catch (e) {}
+    
+  } catch (error) {
+    console.error('[Mindful Words] Failed to save note from context menu:', error);
+  }
+}

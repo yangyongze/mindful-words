@@ -1,0 +1,150 @@
+:root {
+  /* 主色调 */
+  --primary-color: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #818cf8;
+  
+  /* 中性色 - 浅色主题 */
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #6e6e73;
+  --text-meta: #98989d;
+  
+  --background-primary: #ffffff;
+  --background-secondary: #f5f5f7;
+  --background-tertiary: #f3f4f6;
+  --background-card: #f9fafb;
+  
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-color-light: #e5e7eb;
+  
+  /* 状态色 */
+  --success-color: #34c759;
+  --success-hover: #30d158;
+  --warning-color: #f59e0b;
+  --error-color: #ff3b30;
+  --error-hover: #ff453a;
+  --info-color: #3b82f6;
+  --info-hover: #0a84ff;
+  
+  /* 交互色 */
+  --hover-bg-color: rgba(0, 0, 0, 0.04);
+  --focus-border: #4f46e5;
+  --focus-shadow: rgba(79, 70, 229, 0.1);
+  
+  /* 特殊颜色 */
+  --accent-color: #0066cc;
+  --accent-hover: #0a84ff;
+  --note-border-color: rgba(0, 0, 0, 0.08);
+  
+  /* 字体系统 */
+  --font-family-base: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, monospace;
+  
+  /* 字体大小 */
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+  
+  /* 行高 */
+  --line-height-tight: 1.25;
+  --line-height-base: 1.5;
+  --line-height-loose: 1.6;
+  
+  /* 字重 */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* 间距系统 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+  --spacing-4xl: 48px;
+  --spacing-5xl: 64px;
+  
+  /* 圆角 */
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 12px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  /* 动画 */
+  --transition-speed-fast: 150ms;
+  --transition-speed-base: 200ms;
+  --transition-speed-slow: 300ms;
+  
+  /* 尺寸 */
+  --icon-size-sm: 16px;
+  --icon-size-md: 18px;
+  --icon-size-lg: 24px;
+  --icon-size-xl: 32px;
+  --icon-size-2xl: 48px;
+  
+  /* 布局 */
+  --popup-width: 400px;
+  --popup-height: 600px;
+  --options-width: 600px;
+}
+
+/* 深色主题 */
+[data-theme="dark"] {
+  /* 中性色 - 深色主题 */
+  --text-primary: #f5f5f7;
+  --text-secondary: #98989d;
+  --text-tertiary: #98989d;
+  --text-meta: #86868b;
+  
+  --background-primary: #1c1c1e;
+  --background-secondary: #2c2c2e;
+  --background-tertiary: #374151;
+  --background-card: #111827;
+  
+  --border-color: rgba(255, 255, 255, 0.15);
+  --border-color-light: #4b5563;
+  
+  /* 交互色 */
+  --hover-bg-color: rgba(255, 255, 255, 0.1);
+  
+  /* 特殊颜色 */
+  --note-border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* 兼容性变量 - 保持向后兼容 */
+:root {
+  /* 旧变量名映射到新变量名 */
+  --bg-color: var(--background-primary);
+  --card-bg-color: var(--background-card);
+  --text-color: var(--text-primary);
+  --secondary-text: var(--text-secondary);
+  --meta-text-color: var(--text-meta);
+  --alert-color: var(--error-color);
+  --font-sans: var(--font-family-base);
+  --font-mono: var(--font-family-mono);
+  --anim-speed: var(--transition-speed-fast);
+}
+
+/* 深色主题兼容性变量 */
+[data-theme="dark"] {
+  --bg-color: var(--background-primary);
+  --card-bg-color: var(--background-card);
+  --text-color: var(--text-primary);
+  --secondary-text: var(--text-secondary);
+  --meta-text-color: var(--text-meta);
+  --alert-color: var(--error-color);
+}

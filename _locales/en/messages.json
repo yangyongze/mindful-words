@@ -1,0 +1,684 @@
+{
+  "extName": {
+    "message": "Mindful Words",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Save and manage web content mindfully",
+    "description": "Extension description shown in header"
+  },
+  "searchPlaceholder": {
+    "message": "Search notes...",
+    "description": "Search input placeholder"
+  },
+  "btnSettings": {
+    "message": "Settings",
+    "description": "Settings button title"
+  },
+  "btnSelect": {
+    "message": "Select notes",
+    "description": "Select button title"
+  },
+  "btnCopy": {
+    "message": "Copy",
+    "description": "Copy button"
+  },
+  "btnExport": {
+    "message": "Export",
+    "description": "Export button"
+  },
+  "btnDelete": {
+    "message": "Delete",
+    "description": "Delete button"
+  },
+  "btnCancel": {
+    "message": "Cancel",
+    "description": "Cancel button"
+  },
+  "btnSave": {
+    "message": "Save",
+    "description": "Save button"
+  },
+  "selectAll": {
+    "message": "Select all",
+    "description": "Select all checkbox label"
+  },
+  "selectedCount": {
+    "message": "Selected $COUNT$ items",
+    "description": "Selection count",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "noNotes": {
+    "message": "No notes yet",
+    "description": "Empty state title"
+  },
+  "noNotesHint": {
+    "message": "Select text on a webpage and press Ctrl + Left Click to save",
+    "description": "Empty state hint"
+  },
+  "noMatchingNotes": {
+    "message": "No matching notes found",
+    "description": "Search empty state"
+  },
+  "tryOtherKeywords": {
+    "message": "Try different keywords",
+    "description": "Search empty state hint"
+  },
+  "noFilteredNotes": {
+    "message": "No notes match the filters",
+    "description": "Filter empty state"
+  },
+  "adjustFilters": {
+    "message": "Try adjusting filter conditions",
+    "description": "Filter empty state hint"
+  },
+  "deleteNote": {
+    "message": "Delete note",
+    "description": "Delete note button title"
+  },
+  "confirmDelete": {
+    "message": "Confirm deletion",
+    "description": "Confirm dialog title"
+  },
+  "confirmDeleteMessage": {
+    "message": "Are you sure you want to delete this note?",
+    "description": "Confirm delete message"
+  },
+  "confirmBatchDeleteMessage": {
+    "message": "Are you sure you want to delete $COUNT$ selected notes? This action cannot be undone.",
+    "description": "Batch delete confirmation",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "confirm": {
+    "message": "Confirm",
+    "description": "Confirm button"
+  },
+  "editNote": {
+    "message": "Edit note",
+    "description": "Edit modal title"
+  },
+  "contentLabel": {
+    "message": "Content:",
+    "description": "Content input label"
+  },
+  "contentPlaceholder": {
+    "message": "Enter note content...",
+    "description": "Content input placeholder"
+  },
+  "personalNoteLabel": {
+    "message": "Personal note:",
+    "description": "Personal note input label"
+  },
+  "personalNotePlaceholder": {
+    "message": "Add your thoughts or remarks...",
+    "description": "Personal note input placeholder"
+  },
+  "tagsLabel": {
+    "message": "Tags:",
+    "description": "Tags input label"
+  },
+  "tagsPlaceholder": {
+    "message": "Enter tags, separated by commas...",
+    "description": "Tags input placeholder"
+  },
+  "editTags": {
+    "message": "Edit tags",
+    "description": "Tags modal title"
+  },
+  "tagsInputPlaceholder": {
+    "message": "Enter tags...",
+    "description": "Tags input placeholder in modal"
+  },
+  "filterTags": {
+    "message": "Tags",
+    "description": "Filter by tags button"
+  },
+  "filterTime": {
+    "message": "Time",
+    "description": "Filter by time button"
+  },
+  "filterSource": {
+    "message": "Source",
+    "description": "Filter by source button"
+  },
+  "clearFilters": {
+    "message": "Clear filters",
+    "description": "Clear all filters button"
+  },
+  "selectTags": {
+    "message": "Select tags",
+    "description": "Tags dropdown header"
+  },
+  "noTags": {
+    "message": "No tags",
+    "description": "Empty tags message"
+  },
+  "selectTimeRange": {
+    "message": "Select time range",
+    "description": "Time dropdown header"
+  },
+  "today": {
+    "message": "Today",
+    "description": "Time filter option"
+  },
+  "yesterday": {
+    "message": "Yesterday",
+    "description": "Time filter option"
+  },
+  "thisWeek": {
+    "message": "This week",
+    "description": "Time filter option"
+  },
+  "thisMonth": {
+    "message": "This month",
+    "description": "Time filter option"
+  },
+  "last7Days": {
+    "message": "Last 7 days",
+    "description": "Time filter option"
+  },
+  "last30Days": {
+    "message": "Last 30 days",
+    "description": "Time filter option"
+  },
+  "custom": {
+    "message": "Custom",
+    "description": "Custom time range option"
+  },
+  "startDate": {
+    "message": "Start date",
+    "description": "Start date label"
+  },
+  "endDate": {
+    "message": "End date",
+    "description": "End date label"
+  },
+  "selectSource": {
+    "message": "Select source",
+    "description": "Source dropdown header"
+  },
+  "noSources": {
+    "message": "No sources",
+    "description": "Empty sources message"
+  },
+  "exportOptions": {
+    "message": "Export options",
+    "description": "Export menu header"
+  },
+  "exportAI": {
+    "message": "AI Practice Mode",
+    "description": "AI export option"
+  },
+  "exportAIDesc": {
+    "message": "Suitable for pasting into AI apps like Doubao, Qianwen",
+    "description": "AI export option description"
+  },
+  "exportJSON": {
+    "message": "JSON format",
+    "description": "JSON export option"
+  },
+  "exportJSONDesc": {
+    "message": "Export complete data structure",
+    "description": "JSON export option description"
+  },
+  "exportCSV": {
+    "message": "CSV format",
+    "description": "CSV export option"
+  },
+  "exportCSVDesc": {
+    "message": "Suitable for spreadsheet software",
+    "description": "CSV export option description"
+  },
+  "exportTXT": {
+    "message": "TXT format",
+    "description": "TXT export option"
+  },
+  "exportTXTDesc": {
+    "message": "Plain text, works anywhere",
+    "description": "TXT export option description"
+  },
+  "exportAnki": {
+    "message": "Anki (.apkg)",
+    "description": "Anki export option"
+  },
+  "exportAnkiDesc": {
+    "message": "Import into Anki for spaced repetition learning",
+    "description": "Anki export option description"
+  },
+  "exportAnkiFailed": {
+    "message": "Failed to export Anki file, please try again",
+    "description": "Anki export failed toast"
+  },
+  "noteNumber": {
+    "message": "Note $NUMBER$",
+    "description": "Note number in export",
+    "placeholders": {
+      "number": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "source": {
+    "message": "Source",
+    "description": "Source label"
+  },
+  "time": {
+    "message": "Time",
+    "description": "Time label"
+  },
+  "copiedToClipboard": {
+    "message": "Copied to clipboard",
+    "description": "Copy success toast"
+  },
+  "copyFailed": {
+    "message": "Copy failed, please try again",
+    "description": "Copy failed toast"
+  },
+  "deleted": {
+    "message": "Deleted $COUNT$ notes",
+    "description": "Delete success toast",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "deleteFailed": {
+    "message": "Delete failed, please try again",
+    "description": "Delete failed toast"
+  },
+  "selectNotesFirst": {
+    "message": "Please select notes first",
+    "description": "Selection required toast"
+  },
+  "noteNotFound": {
+    "message": "Note not found",
+    "description": "Note not found error"
+  },
+  "contentCannotBeEmpty": {
+    "message": "Content cannot be empty",
+    "description": "Validation error"
+  },
+  "updateFailed": {
+    "message": "Update failed, please try again",
+    "description": "Update failed toast"
+  },
+  "newNoteAdded": {
+    "message": "New note added!",
+    "description": "New note indicator"
+  },
+  "extensionContextInvalid": {
+    "message": "Extension context invalidated, please refresh the page",
+    "description": "Context error message"
+  },
+  "loadFailed": {
+    "message": "Failed to load notes, please refresh",
+    "description": "Load failed message"
+  },
+  "webpage": {
+    "message": "Webpage",
+    "description": "Default source name"
+  },
+  "personalNote": {
+    "message": "Personal note",
+    "description": "Personal note label in export"
+  },
+  "settingsTitle": {
+    "message": "Settings",
+    "description": "Settings page title"
+  },
+  "appearanceSettings": {
+    "message": "Appearance",
+    "description": "Appearance nav item"
+  },
+  "tagsManagement": {
+    "message": "Tags",
+    "description": "Tags nav item"
+  },
+  "dataManagement": {
+    "message": "Data",
+    "description": "Data nav item"
+  },
+  "about": {
+    "message": "About",
+    "description": "About nav item"
+  },
+  "appearanceTitle": {
+    "message": "Appearance Settings",
+    "description": "Appearance section title"
+  },
+  "appearanceDesc": {
+    "message": "Customize the look and feel of the app",
+    "description": "Appearance section description"
+  },
+  "themeMode": {
+    "message": "Theme mode",
+    "description": "Theme mode label"
+  },
+  "themeModeDesc": {
+    "message": "Choose light or dark theme, or follow system settings",
+    "description": "Theme mode description"
+  },
+  "themeLight": {
+    "message": "Light",
+    "description": "Light theme option"
+  },
+  "themeDark": {
+    "message": "Dark",
+    "description": "Dark theme option"
+  },
+  "themeSystem": {
+    "message": "Follow system",
+    "description": "System theme option"
+  },
+  "languageLabel": {
+    "message": "Language",
+    "description": "Language label"
+  },
+  "languageDesc": {
+    "message": "Choose display language",
+    "description": "Language description"
+  },
+  "languageEn": {
+    "message": "English",
+    "description": "English language option"
+  },
+  "languageZhCN": {
+    "message": "Simplified Chinese",
+    "description": "Chinese language option"
+  },
+  "tagsTitle": {
+    "message": "Tag Management",
+    "description": "Tags section title"
+  },
+  "tagsDesc": {
+    "message": "Manage tags used in notes",
+    "description": "Tags section description"
+  },
+  "newTagPlaceholder": {
+    "message": "Enter new tag name...",
+    "description": "New tag input placeholder"
+  },
+  "btnAdd": {
+    "message": "Add",
+    "description": "Add button"
+  },
+  "existingTags": {
+    "message": "Existing tags",
+    "description": "Existing tags header"
+  },
+  "tagCount": {
+    "message": "$COUNT$ tags",
+    "description": "Tag count",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "noTagsYet": {
+    "message": "No tags yet, tags will be created automatically when you add notes",
+    "description": "Empty tags message"
+  },
+  "dataTitle": {
+    "message": "Data Management",
+    "description": "Data section title"
+  },
+  "dataDesc": {
+    "message": "Export, import and clear your data",
+    "description": "Data section description"
+  },
+  "exportData": {
+    "message": "Export data",
+    "description": "Export data label"
+  },
+  "exportDataDesc": {
+    "message": "Export all notes as JSON file",
+    "description": "Export data description"
+  },
+  "btnExportAction": {
+    "message": "Export",
+    "description": "Export button action"
+  },
+  "importData": {
+    "message": "Import data",
+    "description": "Import data label"
+  },
+  "importDataDesc": {
+    "message": "Import notes from JSON file",
+    "description": "Import data description"
+  },
+  "btnImportAction": {
+    "message": "Import",
+    "description": "Import button action"
+  },
+  "clearAllData": {
+    "message": "Clear all data",
+    "description": "Clear data label"
+  },
+  "clearAllDataDesc": {
+    "message": "Delete all notes and settings, this cannot be undone",
+    "description": "Clear data description"
+  },
+  "btnClear": {
+    "message": "Clear",
+    "description": "Clear button action"
+  },
+  "storageUsage": {
+    "message": "Storage usage",
+    "description": "Storage usage label"
+  },
+  "calculating": {
+    "message": "Calculating...",
+    "description": "Calculating storage"
+  },
+  "aboutTitle": {
+    "message": "About",
+    "description": "About section title"
+  },
+  "aboutDesc": {
+    "message": "Learn about Mindful Words",
+    "description": "About section description"
+  },
+  "aboutText": {
+    "message": "A clean and elegant web content collection tool that helps you save and manage valuable web content.",
+    "description": "About description"
+  },
+  "feedback": {
+    "message": "Feedback",
+    "description": "Feedback link"
+  },
+  "changelog": {
+    "message": "Changelog",
+    "description": "Changelog link"
+  },
+  "privacy": {
+    "message": "Privacy Policy",
+    "description": "Privacy link"
+  },
+  "usageStats": {
+    "message": "Usage Statistics",
+    "description": "Usage stats title"
+  },
+  "totalNotes": {
+    "message": "Total notes",
+    "description": "Total notes stat"
+  },
+  "totalTagsStat": {
+    "message": "Total tags",
+    "description": "Total tags stat"
+  },
+  "totalSources": {
+    "message": "Source sites",
+    "description": "Total sources stat"
+  },
+  "saveSettings": {
+    "message": "Save settings",
+    "description": "Save settings button"
+  },
+  "settingsSaved": {
+    "message": "Settings saved",
+    "description": "Settings saved toast"
+  },
+  "settingsSaveFailed": {
+    "message": "Failed to save settings, please try again",
+    "description": "Settings save failed toast"
+  },
+  "tagAdded": {
+    "message": "Tag added",
+    "description": "Tag added toast"
+  },
+  "tagEmpty": {
+    "message": "Tag cannot be empty",
+    "description": "Empty tag error"
+  },
+  "tagExists": {
+    "message": "Tag already exists",
+    "description": "Duplicate tag error"
+  },
+  "confirmDeleteTag": {
+    "message": "Are you sure you want to delete tag \"$TAG$\"?\nThis tag will be removed from all notes.",
+    "description": "Delete tag confirmation",
+    "placeholders": {
+      "tag": {
+        "content": "$1",
+        "example": "important"
+      }
+    }
+  },
+  "tagDeleted": {
+    "message": "Tag deleted",
+    "description": "Tag deleted toast"
+  },
+  "dataExported": {
+    "message": "Data exported successfully",
+    "description": "Export success toast"
+  },
+  "dataExportFailed": {
+    "message": "Export failed, please try again",
+    "description": "Export failed toast"
+  },
+  "invalidDataFormat": {
+    "message": "Invalid data format",
+    "description": "Import format error"
+  },
+  "importConfirm": {
+    "message": "Import $COUNT$ notes?\n\nClick OK to merge with existing data\nClick Cancel to abort",
+    "description": "Import confirmation",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "importCancelled": {
+    "message": "Import cancelled",
+    "description": "Import cancelled toast"
+  },
+  "importedNotes": {
+    "message": "Successfully imported $COUNT$ new notes",
+    "description": "Import success toast",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "importFailed": {
+    "message": "Import failed, please try again",
+    "description": "Import failed toast"
+  },
+  "clearConfirm": {
+    "message": "Are you sure you want to clear all data?\n\nThis will delete all notes and settings and cannot be undone!\n\nType \"DELETE\" to confirm:",
+    "description": "Clear data confirmation"
+  },
+  "clearCancelled": {
+    "message": "Clear operation cancelled",
+    "description": "Clear cancelled toast"
+  },
+  "allDataCleared": {
+    "message": "All data has been cleared",
+    "description": "Clear success toast"
+  },
+  "clearFailed": {
+    "message": "Clear failed, please try again",
+    "description": "Clear failed toast"
+  },
+  "languageChangeNote": {
+    "message": "Language changed. Please refresh the page for full effect.",
+    "description": "Language change toast"
+  },
+  "saveSuccess": {
+    "message": "Note saved successfully!",
+    "description": "Save success message"
+  },
+  "saveFailed": {
+    "message": "Failed to save note: $ERROR$",
+    "description": "Save failed message",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Network error"
+      }
+    }
+  },
+  "selectionTooShort": {
+    "message": "Selection too short, please select more text",
+    "description": "Selection validation"
+  },
+  "contextInvalidWarning": {
+    "message": "Extension updated. Please refresh the page to continue saving notes.",
+    "description": "Context invalid warning"
+  },
+  "refresh": {
+    "message": "Refresh",
+    "description": "Refresh button"
+  },
+  "defaultNote1Content": {
+    "message": "Mindful Words are seeds, action makes them grow. Try, fail, learn, then you'll truly know.",
+    "description": "First default note content"
+  },
+  "defaultNote1Note": {
+    "message": "Welcome to Mindful Words! This is your first note. You can add personal notes to any saved content.",
+    "description": "First default note personal note"
+  },
+  "defaultNote2Content": {
+    "message": "How to save content: Select any text on a webpage, then press and hold Ctrl + Left Click to save it instantly. Your notes will include the content, source URL, timestamp, and tags.",
+    "description": "Second default note content"
+  },
+  "defaultNote2Note": {
+    "message": "Tips: You can also use Ctrl+Shift+S shortcut, or right-click menu to save selected text.",
+    "description": "Second default note personal note"
+  },
+  "welcomeTag": {
+    "message": "welcome",
+    "description": "Welcome tag"
+  },
+  "inspirationTag": {
+    "message": "inspiration",
+    "description": "Inspiration tag"
+  },
+  "tutorialTag": {
+    "message": "tutorial",
+    "description": "Tutorial tag"
+  },
+  "howToTag": {
+    "message": "how-to",
+    "description": "How-to tag"
+  }
+}

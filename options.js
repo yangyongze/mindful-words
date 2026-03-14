@@ -1,308 +1,315 @@
-// 选项页面管理器
 const OptionsManager = {
-  // DOM元素
   elements: {
     themeSelect: null,
+    languageSelect: null,
     saveSettingsBtn: null,
-    tagManager: null
+    tagInput: null,
+    addTagBtn: null,
+    tagList: null,
+    tagCount: null,
+    exportDataBtn: null,
+    importDataBtn: null,
+    importFileInput: null,
+    clearDataBtn: null,
+    storageSize: null,
+    storageProgress: null,
+    totalNotes: null,
+    totalTags: null,
+    totalSources: null,
+    navItems: null,
+    contentSections: null
   },
 
-  // 数据
   data: {
     settings: {
-      theme: 'light'
+      theme: 'light',
+      language: null
     },
-    tags: []
+    tags: [],
+    notes: []
   },
 
-  // 初始化
+  i18n(key, substitutions) {
+    return I18n.get(key, substitutions);
+  },
+
+  applyTranslations() {
+    I18n.applyToDocument();
+  },
+
   initialize() {
     document.addEventListener('DOMContentLoaded', () => {
-      this.initializeElements();
-      this.setupEventListeners();
-      this.loadSettings();
-      this.loadTags();
+      I18n.init(() => {
+        this.initializeElements();
+        this.setupEventListeners();
+        this.loadSettings();
+        this.loadTags();
+        this.loadStats();
+        this.calculateStorage();
+        this.applyTheme();
+        this.applyTranslations();
+      });
     });
   },
 
-  // 初始化DOM元素引用
   initializeElements() {
     this.elements.themeSelect = document.getElementById('theme');
+    this.elements.languageSelect = document.getElementById('language');
     this.elements.saveSettingsBtn = document.getElementById('save-settings');
-    this.elements.tagManager = document.getElementById('tag-manager');
+    this.elements.tagInput = document.getElementById('new-tag-input');
+    this.elements.addTagBtn = document.getElementById('add-tag-btn');
+    this.elements.tagList = document.getElementById('tag-list');
+    this.elements.tagCount = document.getElementById('tag-count');
+    this.elements.exportDataBtn = document.getElementById('export-data-btn');
+    this.elements.importDataBtn = document.getElementById('import-data-btn');
+    this.elements.importFileInput = document.getElementById('import-file-input');
+    this.elements.clearDataBtn = document.getElementById('clear-data-btn');
+    this.elements.storageSize = document.getElementById('storage-size');
+    this.elements.storageProgress = document.getElementById('storage-progress');
+    this.elements.totalNotes = document.getElementById('total-notes');
+    this.elements.totalTags = document.getElementById('total-tags');
+    this.elements.totalSources = document.getElementById('total-sources');
+    this.elements.navItems = document.querySelectorAll('.nav-item');
+    this.elements.contentSections = document.querySelectorAll('.content-section');
   },
 
-  // 设置事件监听器
   setupEventListeners() {
-    // 保存设置按钮
     this.elements.saveSettingsBtn.addEventListener('click', () => {
       this.saveSettings();
     });
+
+    this.elements.addTagBtn.addEventListener('click', () => {
+      this.addNewTag(this.elements.tagInput.value);
+    });
+
+    this.elements.tagInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        this.addNewTag(this.elements.tagInput.value);
+      }
+    });
+
+    this.elements.exportDataBtn.addEventListener('click', () => {
+      this.exportData();
+    });
+
+    this.elements.importDataBtn.addEventListener('click', () => {
+      this.elements.importFileInput.click();
+    });
+
+    this.elements.importFileInput.addEventListener('change', (e) => {
+      this.importData(e);
+    });
+
+    this.elements.clearDataBtn.addEventListener('click', () => {
+      this.clearAllData();
+    });
+
+    this.elements.themeSelect.addEventListener('change', () => {
+      this.applyTheme();
+    });
+
+    this.elements.languageSelect.addEventListener('change', () => {
+      this.saveLanguagePreference();
+    });
+
+    this.elements.navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        this.switchSection(item.dataset.section);
+      });
+    });
   },
 
-  // 从存储加载设置
+  switchSection(sectionId) {
+    this.elements.navItems.forEach(item => {
+      item.classList.toggle('active', item.dataset.section === sectionId);
+    });
+
+    this.elements.contentSections.forEach(section => {
+      section.classList.toggle('active', section.id === `section-${sectionId}`);
+    });
+  },
+
+  applyTheme() {
+    const theme = this.elements.themeSelect.value;
+    
+    if (theme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  },
+
   loadSettings() {
+    if (!chrome?.storage?.local) {
+      console.error('Chrome storage API not available');
+      return;
+    }
     chrome.storage.local.get(['settings'], (result) => {
       if (chrome.runtime.lastError) {
-        console.error('加载设置失败:', chrome.runtime.lastError);
-        this.showNotification('设置加载失败，请刷新页面重试', 'error');
+        console.error('Load settings failed:', chrome.runtime.lastError);
         return;
       }
 
       if (result.settings) {
-        this.data.settings = result.settings;
+        this.data.settings = { ...this.data.settings, ...result.settings };
         this.elements.themeSelect.value = this.data.settings.theme || 'light';
+        if (this.data.settings.language) {
+          this.elements.languageSelect.value = this.data.settings.language;
+        }
+        this.applyTheme();
       }
     });
   },
 
-  // 保存设置
+  saveLanguagePreference() {
+    const language = this.elements.languageSelect.value;
+    this.data.settings.language = language;
+    I18n.setLanguage(language);
+    
+    if (!chrome?.storage?.local) {
+      this.showNotification(this.i18n('extensionContextInvalid'), 'error');
+      return;
+    }
+    
+    chrome.storage.local.set({ settings: this.data.settings }, () => {
+      this.applyTranslations();
+      this.showNotification(this.i18n('languageChangeNote'), 'success');
+    });
+  },
+
   saveSettings() {
+    if (!chrome?.storage?.local) {
+      this.showNotification(this.i18n('extensionContextInvalid'), 'error');
+      return;
+    }
     try {
       const theme = this.elements.themeSelect.value;
+      const language = this.elements.languageSelect.value;
       
-      // 更新本地数据
       this.data.settings.theme = theme;
+      this.data.settings.language = language;
+      I18n.setLanguage(language);
       
-      // 保存到存储
       chrome.storage.local.set({ settings: this.data.settings }, () => {
         if (chrome.runtime.lastError) {
-          console.error('保存设置失败:', chrome.runtime.lastError);
-          this.showNotification('设置保存失败，请重试', 'error');
+          console.error('Save settings failed:', chrome.runtime.lastError);
+          this.showNotification(this.i18n('settingsSaveFailed'), 'error');
           return;
         }
         
-        // 发送主题更新消息
-        chrome.runtime.sendMessage({
-          type: 'update_theme',
-          theme: theme
+        if (chrome?.runtime?.sendMessage) {
+          chrome.runtime.sendMessage({
+            type: 'update_theme',
+            theme: theme
+          });
+        }
+        
+        this.applyTheme();
+        this.applyTranslations();
+        this.showNotification(this.i18n('settingsSaved'), 'success');
+      });
+    } catch (error) {
+      console.error('Save settings error:', error);
+      this.showNotification(this.i18n('settingsSaveFailed'), 'error');
+    }
+  },
+
+  loadTags() {
+    if (!chrome?.storage?.local) return;
+    chrome.storage.local.get(['notes'], (result) => {
+      if (chrome.runtime.lastError) {
+        console.error('Load notes failed:', chrome.runtime.lastError);
+        return;
+      }
+
+      if (result.notes && Array.isArray(result.notes)) {
+        this.data.notes = result.notes;
+        const allTags = new Set();
+        result.notes.forEach(note => {
+          if (note.tags && Array.isArray(note.tags)) {
+            note.tags.forEach(tag => allTags.add(tag));
+          }
         });
         
-        this.showNotification('设置已保存', 'success');
-      });
-    } catch (error) {
-      console.error('保存设置时出错:', error);
-      this.showNotification('保存设置时出错: ' + error.message, 'error');
-    }
+        this.data.tags = Array.from(allTags).sort();
+        this.renderTagList();
+      }
+    });
   },
 
-  // 加载标签数据
-  loadTags() {
-    try {
-      chrome.storage.local.get(['notes'], (result) => {
-        if (chrome.runtime.lastError) {
-          console.error('加载笔记失败:', chrome.runtime.lastError);
-          return;
-        }
-
-        if (result.notes && Array.isArray(result.notes)) {
-          // 提取所有唯一标签
-          const allTags = new Set();
-          result.notes.forEach(note => {
-            if (note.tags && Array.isArray(note.tags)) {
-              note.tags.forEach(tag => allTags.add(tag));
-            }
-          });
-          
-          this.data.tags = Array.from(allTags).sort();
-          this.renderTagManager();
-        }
-      });
-    } catch (error) {
-      console.error('加载标签时出错:', error);
-    }
-  },
-
-  // 渲染标签管理器
-  renderTagManager() {
-    if (!this.elements.tagManager) return;
+  renderTagList() {
+    if (!this.elements.tagList) return;
     
-    this.elements.tagManager.innerHTML = '';
-    
-    // 创建标签管理容器
-    const container = document.createElement('div');
-    container.className = 'tag-manager-container';
-    
-    // 标题
-    const title = document.createElement('h3');
-    title.textContent = '标签管理';
-    container.appendChild(title);
-    
-    // 添加标签输入区域
-    const inputContainer = document.createElement('div');
-    inputContainer.className = 'tag-input-container';
-    inputContainer.innerHTML = `
-      <input type="text" id="new-tag-input" placeholder="输入新标签">
-      <button id="add-tag-btn" class="button">添加</button>
-    `;
-    container.appendChild(inputContainer);
-    
-    // 标签列表
-    const tagListContainer = document.createElement('div');
-    tagListContainer.className = 'tag-list-container';
+    this.elements.tagList.innerHTML = '';
+    this.elements.tagCount.textContent = this.i18n('tagCount', [this.data.tags.length.toString()]);
     
     if (this.data.tags.length === 0) {
-      const emptyMessage = document.createElement('p');
-      emptyMessage.textContent = '暂无标签';
-      emptyMessage.className = 'empty-message';
-      tagListContainer.appendChild(emptyMessage);
-    } else {
-      const tagList = document.createElement('ul');
-      tagList.className = 'tag-list';
-      
-      this.data.tags.forEach(tag => {
-        const tagItem = document.createElement('li');
-        tagItem.className = 'tag-item';
-        
-        const tagText = document.createElement('span');
-        tagText.className = 'tag-text';
-        tagText.textContent = tag;
-        
-        const tagActions = document.createElement('div');
-        tagActions.className = 'tag-actions';
-        
-        const editBtn = document.createElement('button');
-        editBtn.className = 'tag-edit-btn';
-        editBtn.textContent = '编辑';
-        editBtn.addEventListener('click', () => this.editTag(tag));
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'tag-delete-btn';
-        deleteBtn.textContent = '删除';
-        deleteBtn.addEventListener('click', () => this.deleteTag(tag));
-        
-        tagActions.appendChild(editBtn);
-        tagActions.appendChild(deleteBtn);
-        
-        tagItem.appendChild(tagText);
-        tagItem.appendChild(tagActions);
-        tagList.appendChild(tagItem);
-      });
-      
-      tagListContainer.appendChild(tagList);
+      const emptyMessage = document.createElement('div');
+      emptyMessage.className = 'tag-empty';
+      emptyMessage.textContent = this.i18n('noTagsYet');
+      this.elements.tagList.appendChild(emptyMessage);
+      return;
     }
     
-    container.appendChild(tagListContainer);
-    this.elements.tagManager.appendChild(container);
-    
-    // 添加标签按钮事件
-    const addTagBtn = document.getElementById('add-tag-btn');
-    const newTagInput = document.getElementById('new-tag-input');
-    
-    if (addTagBtn && newTagInput) {
-      addTagBtn.addEventListener('click', () => {
-        this.addNewTag(newTagInput.value);
+    this.data.tags.forEach(tag => {
+      const tagItem = document.createElement('div');
+      tagItem.className = 'tag-item';
+      tagItem.innerHTML = `
+        <span>${tag}</span>
+        <span class="tag-remove" data-tag="${tag}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </span>
+      `;
+      
+      const removeBtn = tagItem.querySelector('.tag-remove');
+      removeBtn.addEventListener('click', () => {
+        this.deleteTag(tag);
       });
       
-      newTagInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          this.addNewTag(newTagInput.value);
-        }
-      });
-    }
+      this.elements.tagList.appendChild(tagItem);
+    });
   },
 
-  // 添加新标签
   addNewTag(tagName) {
     const trimmedTag = tagName.trim();
     
     if (!trimmedTag) {
-      this.showNotification('标签不能为空', 'error');
+      this.showNotification(this.i18n('tagEmpty'), 'error');
       return;
     }
     
     if (this.data.tags.includes(trimmedTag)) {
-      this.showNotification('标签已存在', 'error');
+      this.showNotification(this.i18n('tagExists'), 'error');
       return;
     }
     
     this.data.tags.push(trimmedTag);
     this.data.tags.sort();
     
-    this.renderTagManager();
-    document.getElementById('new-tag-input').value = '';
-    this.showNotification('标签已添加', 'success');
+    this.renderTagList();
+    this.elements.tagInput.value = '';
+    this.showNotification(this.i18n('tagAdded'), 'success');
   },
 
-  // 编辑标签
-  editTag(oldTag) {
-    const newTag = prompt('编辑标签:', oldTag);
-    
-    if (newTag === null) return; // 用户取消
-    
-    const trimmedTag = newTag.trim();
-    
-    if (!trimmedTag) {
-      this.showNotification('标签不能为空', 'error');
-      return;
-    }
-    
-    if (trimmedTag === oldTag) return; // 没有变化
-    
-    if (this.data.tags.includes(trimmedTag)) {
-      this.showNotification('标签已存在', 'error');
-      return;
-    }
-    
-    // 更新标签列表
-    const index = this.data.tags.indexOf(oldTag);
-    if (index !== -1) {
-      this.data.tags[index] = trimmedTag;
-      this.data.tags.sort();
-    }
-    
-    // 更新所有笔记中的标签
-    this.updateTagsInNotes(oldTag, trimmedTag);
-    
-    this.renderTagManager();
-    this.showNotification('标签已更新', 'success');
-  },
-
-  // 删除标签
   deleteTag(tag) {
-    if (!confirm(`确定要删除标签 "${tag}"?`)) return;
+    if (!confirm(this.i18n('confirmDeleteTag', [tag]))) return;
     
-    // 从标签列表中删除
     const index = this.data.tags.indexOf(tag);
     if (index !== -1) {
       this.data.tags.splice(index, 1);
     }
     
-    // 从所有笔记中删除该标签
     this.removeTagFromNotes(tag);
-    
-    this.renderTagManager();
-    this.showNotification('标签已删除', 'success');
+    this.renderTagList();
+    this.showNotification(this.i18n('tagDeleted'), 'success');
   },
 
-  // 更新所有笔记中的标签
-  updateTagsInNotes(oldTag, newTag) {
-    chrome.storage.local.get(['notes'], (result) => {
-      if (chrome.runtime.lastError || !result.notes) return;
-      
-      let updated = false;
-      
-      const updatedNotes = result.notes.map(note => {
-        if (note.tags && Array.isArray(note.tags)) {
-          const tagIndex = note.tags.indexOf(oldTag);
-          if (tagIndex !== -1) {
-            updated = true;
-            const newTags = [...note.tags];
-            newTags[tagIndex] = newTag;
-            return { ...note, tags: newTags, updatedAt: new Date().toISOString() };
-          }
-        }
-        return note;
-      });
-      
-      if (updated) {
-        chrome.storage.local.set({ notes: updatedNotes });
-      }
-    });
-  },
-
-  // 从所有笔记中删除标签
   removeTagFromNotes(tagToRemove) {
+    if (!chrome?.storage?.local) return;
     chrome.storage.local.get(['notes'], (result) => {
       if (chrome.runtime.lastError || !result.notes) return;
       
@@ -322,137 +329,220 @@ const OptionsManager = {
       
       if (updated) {
         chrome.storage.local.set({ notes: updatedNotes });
+        this.data.notes = updatedNotes;
+        this.loadStats();
       }
     });
   },
-  
-  // 显示通知
+
+  loadStats() {
+    if (!chrome?.storage?.local) {
+      this.elements.totalNotes.textContent = '0';
+      this.elements.totalTags.textContent = '0';
+      this.elements.totalSources.textContent = '0';
+      return;
+    }
+    chrome.storage.local.get(['notes'], (result) => {
+      if (chrome.runtime.lastError || !result.notes) {
+        this.elements.totalNotes.textContent = '0';
+        this.elements.totalTags.textContent = '0';
+        this.elements.totalSources.textContent = '0';
+        return;
+      }
+      
+      const notes = result.notes;
+      const allTags = new Set();
+      const allSources = new Set();
+      
+      notes.forEach(note => {
+        if (note.tags && Array.isArray(note.tags)) {
+          note.tags.forEach(tag => allTags.add(tag));
+        }
+        if (note.url) {
+          try {
+            const url = new URL(note.url);
+            allSources.add(url.hostname);
+          } catch (e) {
+            allSources.add(note.url);
+          }
+        }
+      });
+      
+      this.elements.totalNotes.textContent = notes.length;
+      this.elements.totalTags.textContent = allTags.size;
+      this.elements.totalSources.textContent = allSources.size;
+    });
+  },
+
+  calculateStorage() {
+    if (!chrome?.storage?.local) {
+      this.elements.storageSize.textContent = 'N/A';
+      return;
+    }
+    chrome.storage.local.getBytesInUse(null, (bytesInUse) => {
+      const totalBytes = chrome.storage.local.QUOTA_BYTES || 5242880;
+      const usedMB = (bytesInUse / 1024 / 1024).toFixed(2);
+      const totalMB = (totalBytes / 1024 / 1024).toFixed(0);
+      const percentage = ((bytesInUse / totalBytes) * 100).toFixed(1);
+      
+      this.elements.storageSize.textContent = `${usedMB} MB / ${totalMB} MB`;
+      this.elements.storageProgress.style.width = `${percentage}%`;
+      
+      if (percentage > 80) {
+        this.elements.storageProgress.style.backgroundColor = 'var(--error-color)';
+      } else if (percentage > 60) {
+        this.elements.storageProgress.style.backgroundColor = '#ff9500';
+      }
+    });
+  },
+
+  exportData() {
+    if (!chrome?.storage?.local) {
+      this.showNotification(this.i18n('extensionContextInvalid'), 'error');
+      return;
+    }
+    chrome.storage.local.get(['notes', 'settings'], (result) => {
+      if (chrome.runtime.lastError) {
+        this.showNotification(this.i18n('dataExportFailed'), 'error');
+        return;
+      }
+      
+      const exportData = {
+        version: '1.0.0',
+        exportDate: new Date().toISOString(),
+        notes: result.notes || [],
+        settings: result.settings || {}
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mindful-words-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      this.showNotification(this.i18n('dataExported'), 'success');
+    });
+  },
+
+  importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!chrome?.storage?.local) {
+      this.showNotification(this.i18n('extensionContextInvalid'), 'error');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        
+        if (!importedData.notes || !Array.isArray(importedData.notes)) {
+          throw new Error(this.i18n('invalidDataFormat'));
+        }
+        
+        const confirmMsg = this.i18n('importConfirm', [importedData.notes.length.toString()]);
+        
+        if (!confirm(confirmMsg)) {
+          this.elements.importFileInput.value = '';
+          return;
+        }
+        
+        chrome.storage.local.get(['notes'], (result) => {
+          const existingNotes = result.notes || [];
+          const existingIds = new Set(existingNotes.map(n => n.id));
+          
+          const newNotes = importedData.notes.filter(n => !existingIds.has(n.id));
+          const mergedNotes = [...existingNotes, ...newNotes];
+          
+          chrome.storage.local.set({ 
+            notes: mergedNotes,
+            settings: importedData.settings || result.settings
+          }, () => {
+            if (chrome.runtime.lastError) {
+              this.showNotification(this.i18n('importFailed'), 'error');
+              return;
+            }
+            
+            this.data.notes = mergedNotes;
+            this.loadTags();
+            this.loadStats();
+            this.calculateStorage();
+            this.showNotification(this.i18n('importedNotes', [newNotes.length.toString()]), 'success');
+          });
+        });
+      } catch (error) {
+        console.error('Import parse error:', error);
+        this.showNotification(this.i18n('invalidDataFormat'), 'error');
+      }
+    };
+    
+    reader.readAsText(file);
+    this.elements.importFileInput.value = '';
+  },
+
+  clearAllData() {
+    const confirmMsg = this.i18n('clearConfirm');
+    const userInput = prompt(confirmMsg);
+    
+    if (userInput !== 'DELETE') {
+      if (userInput !== null) {
+        this.showNotification(this.i18n('clearCancelled'), 'error');
+      }
+      return;
+    }
+    
+    if (!chrome?.storage?.local) {
+      this.showNotification(this.i18n('extensionContextInvalid'), 'error');
+      return;
+    }
+    
+    chrome.storage.local.clear(() => {
+      if (chrome.runtime.lastError) {
+        this.showNotification(this.i18n('clearFailed'), 'error');
+        return;
+      }
+      
+      this.data.notes = [];
+      this.data.tags = [];
+      this.data.settings = { theme: 'light', language: null };
+      
+      this.elements.themeSelect.value = 'light';
+      this.applyTheme();
+      this.renderTagList();
+      this.loadStats();
+      this.calculateStorage();
+      
+      this.showNotification(this.i18n('allDataCleared'), 'success');
+    });
+  },
+
   showNotification(message, type) {
-    // 移除可能存在的通知
     const existingNotification = document.querySelector('.notification');
     if (existingNotification) {
       existingNotification.remove();
     }
     
-    // 创建通知元素
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
     
-    // 添加到页面
     document.body.appendChild(notification);
     
-    // 自动关闭
     setTimeout(() => {
       notification.classList.add('fadeout');
       setTimeout(() => {
         if (notification.parentNode) {
           notification.remove();
         }
-      }, 300);
+      }, 200);
     }, 3000);
   }
 };
 
-// 添加样式
-const style = document.createElement('style');
-style.textContent = `
-  .tag-manager-container {
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .tag-input-container {
-    display: flex;
-    margin-bottom: 15px;
-  }
-  
-  .tag-input-container input {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px 0 0 4px;
-  }
-  
-  .tag-input-container button {
-    padding: 8px 12px;
-    background-color: #4285f4;
-    color: white;
-    border: none;
-    border-radius: 0 4px 4px 0;
-    cursor: pointer;
-  }
-  
-  .tag-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .tag-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .tag-text {
-    flex: 1;
-  }
-  
-  .tag-actions {
-    display: flex;
-    gap: 5px;
-  }
-  
-  .tag-actions button {
-    padding: 4px 8px;
-    background-color: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    cursor: pointer;
-  }
-  
-  .tag-edit-btn:hover {
-    background-color: #e0e0e0;
-  }
-  
-  .tag-delete-btn:hover {
-    background-color: #ffebee;
-  }
-  
-  .empty-message {
-    color: #757575;
-    font-style: italic;
-  }
-  
-  .notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 10px 15px;
-    border-radius: 4px;
-    color: white;
-    z-index: 1000;
-    transition: opacity 0.3s;
-  }
-  
-  .notification.success {
-    background-color: #4CAF50;
-  }
-  
-  .notification.error {
-    background-color: #F44336;
-  }
-  
-  .notification.fadeout {
-    opacity: 0;
-  }
-`;
-document.head.appendChild(style);
-
-// 初始化选项页面
 OptionsManager.initialize();

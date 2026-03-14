@@ -1,88 +1,249 @@
-// 文本选择和保存功能封装
 const noteCapture = {
-  // 状态跟踪
+  VERSION: '2024.03.14.v4',
+  
   status: {
     isSaving: false,
     lastSaveTime: 0,
-    feedbackElement: null
+    feedbackElement: null,
+    lastSelectedText: '',
+    lastSelectionRange: null,
+    ctrlKeyPressed: false,
+    contextValid: true
+  },
+
+  i18n(key) {
+    return chrome.i18n.getMessage(key) || key;
   },
   
-  // 初始化
   initialize() {
+    console.log(`[Mindful Words] Content script v${this.VERSION} loading...`);
+    console.log('[Mindful Words] Chrome runtime available:', !!chrome?.runtime);
+    console.log('[Mindful Words] Chrome runtime.id:', chrome?.runtime?.id || 'N/A');
+    
     this.setupEventListeners();
-    console.log('Mindful Words 内容脚本已加载');
+    this.startContextCheck();
+    console.log(`[Mindful Words] Content script v${this.VERSION} loaded successfully`);
+  },
+  
+  // Check if extension context is valid
+  isExtensionContextValid() {
+    try {
+      const valid = !!(chrome && chrome.runtime && chrome.runtime.id);
+      if (!valid) {
+        console.warn('[Mindful Words] Extension context check failed');
+      }
+      return valid;
+    } catch (e) {
+      console.error('[Mindful Words] Extension context check error:', e);
+      return false;
+    }
+  },
+  
+  // Periodically check extension context
+  startContextCheck() {
+    const checkInterval = setInterval(() => {
+      if (!this.isExtensionContextValid()) {
+        this.status.contextValid = false;
+        clearInterval(checkInterval);
+        this.showContextInvalidWarning();
+      }
+    }, 5000); // Check every 5 seconds
+  },
+  
+  showContextInvalidWarning() {
+    if (this.status.feedbackElement) {
+      this.status.feedbackElement.remove();
+    }
+    
+    const warning = document.createElement('div');
+    warning.id = 'mindful-words-context-warning';
+    warning.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #f44336;
+      color: white;
+      padding: 12px 20px;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      z-index: 2147483647;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    `;
+    warning.innerHTML = `
+      <strong>Mindful Words:</strong> ${this.i18n('contextInvalidWarning')}
+      <button id="mindful-words-refresh-btn" style="
+        background: white;
+        color: #f44336;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 12px;
+        font-weight: bold;
+      ">${this.i18n('refresh')}</button>
+    `;
+    
+    document.body.appendChild(warning);
+    
+    document.getElementById('mindful-words-refresh-btn').addEventListener('click', () => {
+      window.location.reload();
+    });
   },
   
   // 设置事件监听器
   setupEventListeners() {
-    document.addEventListener('mouseup', this.handleTextSelection.bind(this));
-    // 添加快捷键支持
+    const self = this;
+    
+    // Track Ctrl key state
     document.addEventListener('keydown', (event) => {
-      // Ctrl+Shift+S 快捷键
+      if (event.ctrlKey) {
+        self.status.ctrlKeyPressed = true;
+      }
+      // Ctrl+Shift+S shortcut
       if (event.ctrlKey && event.shiftKey && event.key === 'S') {
         event.preventDefault();
-        this.captureSelectedText();
+        self.captureSelectedText();
       }
-    });
+    }, true);
+    
+    document.addEventListener('keyup', (event) => {
+      if (!event.ctrlKey) {
+        self.status.ctrlKeyPressed = false;
+      }
+    }, true);
+    
+    // Track text selection - use capture phase for better reliability
+    document.addEventListener('selectionchange', () => {
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+      if (text.length > 0) {
+        self.status.lastSelectedText = text;
+        // Store selection range for potential restoration
+        try {
+          self.status.lastSelectionRange = selection.getRangeAt(0).cloneRange();
+        } catch (e) {
+          self.status.lastSelectionRange = null;
+        }
+      }
+    }, true);
+    
+    // Capture on Ctrl+mouseup - use capture phase
+    document.addEventListener('mouseup', (event) => {
+      if (event.ctrlKey) {
+        // Small delay to ensure selection is captured
+        setTimeout(() => {
+          if (self.status.lastSelectedText.length > 0) {
+            self.captureSelectedText();
+          }
+        }, 10);
+      }
+    }, true);
+    
+    // Also support Ctrl+click via click event for better reliability
+    document.addEventListener('click', (event) => {
+      if (event.ctrlKey && self.status.lastSelectedText.length > 0) {
+        // Prevent default only if we have selection
+        event.preventDefault();
+        event.stopPropagation();
+        self.captureSelectedText();
+      }
+    }, true);
+    
+    // Add context menu support for saving selected text
+    document.addEventListener('contextmenu', () => {
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+      if (text.length > 0) {
+        self.status.lastSelectedText = text;
+        try {
+          self.status.lastSelectionRange = selection.getRangeAt(0).cloneRange();
+        } catch (e) {
+          self.status.lastSelectionRange = null;
+        }
+      }
+    }, true);
   },
   
-  // 处理文本选择事件
-  async handleTextSelection(event) {
-    if (event.ctrlKey) {
-      await this.captureSelectedText();
-    }
-  },
-  
-  // 捕获选中文本
+  // Capture selected text
   async captureSelectedText() {
+    // Check extension context first
+    if (!this.isExtensionContextValid()) {
+      console.warn('[Mindful Words] Extension context invalidated, please refresh the page');
+      this.showSaveFeedback('Please refresh the page and try again', 'error');
+      return;
+    }
+    
     try {
-      // 防止重复保存和快速点击
+      // Prevent duplicate saves
       if (this.status.isSaving) return;
       if (Date.now() - this.status.lastSaveTime < 1000) return;
       
+      // Get selected text from current selection or stored selection
       const selection = window.getSelection();
-      const selectedText = selection.toString().trim();
+      let selectedText = selection.toString().trim();
       
-      if (selectedText.length === 0) return;
+      // Fallback to stored selection if current selection is empty
+      if (selectedText.length === 0 && this.status.lastSelectedText.length > 0) {
+        selectedText = this.status.lastSelectedText;
+      }
+      
+      if (selectedText.length === 0) {
+        console.log('[Mindful Words] No text selected');
+        return;
+      }
+      
+      // Clear stored selection after capturing
+      const textToSave = selectedText;
+      this.status.lastSelectedText = '';
+      this.status.lastSelectionRange = null;
       
       this.status.isSaving = true;
       
-      // 获取网页信息
+      // Get page info
       const pageTitle = document.title;
       const pageUrl = window.location.href;
       
-      // 显示保存中反馈
-      this.showSaveFeedback('保存中...', 'pending');
+      console.log('[Mindful Words] Saving note:', textToSave.substring(0, 50) + '...');
       
-      // 发送消息给背景脚本
+      // Show saving feedback
+      this.showSaveFeedback('Saving...', 'pending');
+      
+      // Send message to background script
       const response = await this.sendMessageToBackground({
         type: 'save_note',
-        content: selectedText,
+        content: textToSave,
         title: pageTitle,
         url: pageUrl,
         tags: []
       });
       
       if (response && response.status === 'success') {
-        this.showSaveFeedback('笔记已保存!', 'success');
+        this.showSaveFeedback('Note saved!', 'success');
+        console.log('[Mindful Words] Note saved successfully');
       } else {
-        throw new Error(response?.message || '保存失败');
+        throw new Error(response?.message || 'Save failed');
       }
     } catch (error) {
-      console.error('保存笔记时出错:', error);
-      this.showSaveFeedback(`保存失败: ${error.message}`, 'error');
+      console.error('[Mindful Words] Error saving note:', error);
+      this.showSaveFeedback(`Save failed: ${error.message}`, 'error');
     } finally {
       this.status.isSaving = false;
       this.status.lastSaveTime = Date.now();
     }
   },
   
-  // 发送消息到背景脚本
+  // Send message to background script
   sendMessageToBackground(message) {
     return new Promise((resolve, reject) => {
+      if (!chrome?.runtime?.sendMessage) {
+        reject(new Error('Extension context invalidated. Please refresh the page and try again.'));
+        return;
+      }
       chrome.runtime.sendMessage(message, (response) => {
         if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message || '扩展通信错误'));
+          reject(new Error(chrome.runtime.lastError.message || 'Extension communication error'));
         } else {
           resolve(response);
         }
@@ -90,15 +251,15 @@ const noteCapture = {
     });
   },
   
-  // 显示操作反馈
+  // Show operation feedback
   showSaveFeedback(message, type = 'success') {
-    // 先移除可能存在的反馈元素
+    // Remove existing feedback element
     if (this.status.feedbackElement) {
       this.status.feedbackElement.remove();
       this.status.feedbackElement = null;
     }
     
-    // 创建反馈元素
+    // Create feedback element
     const feedback = document.createElement('div');
     feedback.style.position = 'fixed';
     feedback.style.bottom = '20px';
@@ -114,7 +275,7 @@ const noteCapture = {
     feedback.style.alignItems = 'center';
     feedback.style.gap = '8px';
     
-    // 根据类型设置样式
+    // Set style based on type
     switch (type) {
       case 'success':
         feedback.style.backgroundColor = '#4CAF50';
@@ -146,7 +307,7 @@ const noteCapture = {
           </svg>
           ${message}
         `;
-        // 添加旋转动画
+        // Add spin animation
         const style = document.createElement('style');
         style.textContent = `
           @keyframes spin {
@@ -164,7 +325,7 @@ const noteCapture = {
     document.body.appendChild(feedback);
     this.status.feedbackElement = feedback;
     
-    // 非pending状态自动移除
+    // Auto-remove for non-pending states
     if (type !== 'pending') {
       setTimeout(() => {
         if (feedback.parentNode) {

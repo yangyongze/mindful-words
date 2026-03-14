@@ -6,27 +6,16 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <!-- 标题区域 - 苹果风格设计 -->
   <header class="header">
     <div class="header-content">
-      <!-- <div class="app-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-        </svg>
-      </div> -->
-      
       <h1 class="header-title">Mindful Words</h1>
-      <!-- <p class="header-subtitle">Ctrl选中文本即可保存</p> -->
-      <p class="header-subtitle">are seeds, action makes them grow. Try, fail, learn, then you'll truly know.</p>
+      <p class="header-subtitle" data-i18n="extDescription">are seeds, action makes them grow. Try, fail, learn, then you'll truly know.</p>
     </div>
       
     <div class="header-toolbar">
       <div class="search-container">
-        <input type="text" id="search-input" placeholder="搜索笔记..." />
-        <button id="clear-search" title="清除搜索">
+        <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" />
+        <button id="clear-search" title="Clear search">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -35,37 +24,91 @@
       </div>
       
       <div class="header-actions">
-        <button id="export-btn" title="导出笔记">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
+        <button id="select-btn" data-i18n-title="btnSelect">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
           </svg>
         </button>
-        <button id="settings-btn" title="设置">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="black"  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <button id="settings-btn" data-i18n-title="btnSettings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
         </button>
       </div>
     </div>
+    
+    <div id="filter-bar" class="filter-bar">
+      <div class="filter-buttons">
+        <button id="filter-tags-btn" class="filter-btn">
+          <span data-i18n="filterTags">Tags</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <button id="filter-time-btn" class="filter-btn">
+          <span data-i18n="filterTime">Time</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <button id="filter-source-btn" class="filter-btn">
+          <span data-i18n="filterSource">Source</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <button id="clear-filters-btn" class="filter-btn filter-btn-clear hidden" data-i18n="clearFilters">Clear filters</button>
+      </div>
+      <div id="active-filters" class="active-filters hidden"></div>
+    </div>
   </header>
   
-  <!-- 笔记列表区域 -->
+  <div id="selection-bar" class="selection-bar hidden">
+    <div class="selection-info">
+      <label class="select-all-label">
+        <input type="checkbox" id="select-all-checkbox" />
+        <span data-i18n="selectAll">Select all</span>
+      </label>
+      <span id="selection-count">0</span>
+    </div>
+    <div class="selection-actions">
+      <button id="copy-selected-btn" class="btn-action btn-primary" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span data-i18n="btnCopy">Copy</span>
+      </button>
+      <button id="export-selected-btn" class="btn-action btn-primary" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        </svg>
+        <span data-i18n="btnExport">Export</span>
+      </button>
+      <button id="delete-selected-btn" class="btn-action btn-danger" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        <span data-i18n="btnDelete">Delete</span>
+      </button>
+      <button id="cancel-selection-btn" class="btn-action btn-cancel" data-i18n="btnCancel">Cancel</button>
+    </div>
+  </div>
+  
   <div class="notes-container">
     <div class="fade-edge fade-top"></div>
     <div class="notes-list" id="notes-list">
-      <!-- 笔记列表将通过JavaScript动态加载 -->
     </div>
     <div class="fade-edge fade-bottom"></div>
   </div>
 
-  <!-- 编辑模态框 -->
   <div id="edit-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>编辑笔记</h3>
+        <h3 data-i18n="editNote">Edit note</h3>
         <button id="close-modal" class="close-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -75,25 +118,66 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="edit-content">内容:</label>
-          <textarea id="edit-content" rows="6" placeholder="输入笔记内容..."></textarea>
+          <label for="edit-content" data-i18n="contentLabel">Content:</label>
+          <textarea id="edit-content" rows="6" data-i18n-placeholder="contentPlaceholder"></textarea>
         </div>
         <div class="form-group">
-          <label for="edit-note">个人笔记:</label>
-          <textarea id="edit-note" rows="3" placeholder="添加你的想法或备注..."></textarea>
+          <label for="edit-note" data-i18n="personalNoteLabel">Personal note:</label>
+          <textarea id="edit-note" rows="3" data-i18n-placeholder="personalNotePlaceholder"></textarea>
         </div>
         <div class="form-group">
-          <label for="edit-tags">标签:</label>
-          <input type="text" id="edit-tags" placeholder="输入标签，用逗号分隔..." />
+          <label for="edit-tags" data-i18n="tagsLabel">Tags:</label>
+          <input type="text" id="edit-tags" data-i18n-placeholder="tagsPlaceholder" />
         </div>
       </div>
       <div class="modal-footer">
-        <button id="cancel-edit" class="btn-secondary">取消</button>
-        <button id="save-edit" class="btn-primary">保存</button>
+        <button id="cancel-edit" class="btn-secondary" data-i18n="btnCancel">Cancel</button>
+        <button id="save-edit" class="btn-primary" data-i18n="btnSave">Save</button>
       </div>
     </div>
   </div>
 
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3 id="confirm-title" data-i18n="confirmDelete">Confirm</h3>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-cancel" class="btn-secondary" data-i18n="btnCancel">Cancel</button>
+        <button id="confirm-ok" class="btn-primary" data-i18n="confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tags-modal" class="modal">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3 data-i18n="editTags">Edit tags</h3>
+        <button id="close-tags-modal" class="close-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="tags-input" data-i18n="tagsLabel">Tags:</label>
+          <input type="text" id="tags-input" data-i18n-placeholder="tagsInputPlaceholder" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-tags" class="btn-secondary" data-i18n="btnCancel">Cancel</button>
+        <button id="save-tags" class="btn-primary" data-i18n="btnSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="apkg-generator.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -1,10 +1,9 @@
 // 弹出窗口管理对象
 const PopupManager = {
-  // DOM元素引用
   elements: {
     notesList: null,
     settingsBtn: null,
-    exportBtn: null,
+    selectBtn: null,
     searchInput: null,
     clearSearchBtn: null,
     editModal: null,
@@ -13,28 +12,68 @@ const PopupManager = {
     editTags: null,
     closeModal: null,
     cancelEdit: null,
-    saveEdit: null
+    saveEdit: null,
+    confirmModal: null,
+    confirmTitle: null,
+    confirmMessage: null,
+    confirmCancel: null,
+    confirmOk: null,
+    tagsModal: null,
+    tagsInput: null,
+    closeTagsModal: null,
+    cancelTags: null,
+    saveTags: null,
+    selectionBar: null,
+    selectAllCheckbox: null,
+    selectionCount: null,
+    copySelectedBtn: null,
+    exportSelectedBtn: null,
+    deleteSelectedBtn: null,
+    cancelSelectionBtn: null,
+    filterTagsBtn: null,
+    filterTimeBtn: null,
+    filterSourceBtn: null,
+    clearFiltersBtn: null,
+    activeFilters: null
   },
   
-  // 数据存储
   data: {
     notes: [],
-    filteredNotes: [], // 搜索过滤后的笔记
-    currentEditingNote: null, // 当前编辑的笔记
-    searchQuery: '', // 当前搜索关键词
+    filteredNotes: [],
+    currentEditingNote: null,
+    searchQuery: '',
+    confirmCallback: null,
+    editingTagsNoteId: null,
+    selectionMode: false,
+    selectedNoteIds: new Set(),
+    filters: {
+      tags: [],
+      timeRange: null,
+      sources: []
+    },
     settings: {
       theme: 'light'
     }
   },
+
+  i18n(key, substitutions) {
+    return I18n.get(key, substitutions);
+  },
+
+  applyTranslations() {
+    I18n.applyToDocument();
+  },
   
-  // 初始化
   initialize() {
     document.addEventListener('DOMContentLoaded', () => {
-      this.initializeElements();
-      this.setupEventListeners();
-      this.loadSettings();
-      this.loadNotes();
-      this.restoreScrollPosition();
+      I18n.init(() => {
+        this.initializeElements();
+        this.setupEventListeners();
+        this.loadSettings();
+        this.loadNotes();
+        this.restoreScrollPosition();
+        this.applyTranslations();
+      });
     });
   },
   
@@ -42,7 +81,7 @@ const PopupManager = {
   initializeElements() {
     this.elements.notesList = document.getElementById('notes-list');
     this.elements.settingsBtn = document.getElementById('settings-btn');
-    this.elements.exportBtn = document.getElementById('export-btn');
+    this.elements.selectBtn = document.getElementById('select-btn');
     this.elements.searchInput = document.getElementById('search-input');
     this.elements.clearSearchBtn = document.getElementById('clear-search');
     this.elements.editModal = document.getElementById('edit-modal');
@@ -52,45 +91,110 @@ const PopupManager = {
     this.elements.closeModal = document.getElementById('close-modal');
     this.elements.cancelEdit = document.getElementById('cancel-edit');
     this.elements.saveEdit = document.getElementById('save-edit');
+    this.elements.confirmModal = document.getElementById('confirm-modal');
+    this.elements.confirmTitle = document.getElementById('confirm-title');
+    this.elements.confirmMessage = document.getElementById('confirm-message');
+    this.elements.confirmCancel = document.getElementById('confirm-cancel');
+    this.elements.confirmOk = document.getElementById('confirm-ok');
+    this.elements.tagsModal = document.getElementById('tags-modal');
+    this.elements.tagsInput = document.getElementById('tags-input');
+    this.elements.closeTagsModal = document.getElementById('close-tags-modal');
+    this.elements.cancelTags = document.getElementById('cancel-tags');
+    this.elements.saveTags = document.getElementById('save-tags');
+    this.elements.selectionBar = document.getElementById('selection-bar');
+    this.elements.selectAllCheckbox = document.getElementById('select-all-checkbox');
+    this.elements.selectionCount = document.getElementById('selection-count');
+    this.elements.copySelectedBtn = document.getElementById('copy-selected-btn');
+    this.elements.exportSelectedBtn = document.getElementById('export-selected-btn');
+    this.elements.deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    this.elements.cancelSelectionBtn = document.getElementById('cancel-selection-btn');
+    this.elements.filterTagsBtn = document.getElementById('filter-tags-btn');
+    this.elements.filterTimeBtn = document.getElementById('filter-time-btn');
+    this.elements.filterSourceBtn = document.getElementById('filter-source-btn');
+    this.elements.clearFiltersBtn = document.getElementById('clear-filters-btn');
+    this.elements.activeFilters = document.getElementById('active-filters');
   },
   
   // 设置事件监听器
   setupEventListeners() {
     // 设置按钮点击事件
     this.elements.settingsBtn.addEventListener('click', () => {
-      chrome.runtime.openOptionsPage();
+      if (chrome?.runtime?.openOptionsPage) {
+        chrome.runtime.openOptionsPage();
+      }
     });
     
-    // 导出按钮点击事件
-    this.elements.exportBtn.addEventListener('click', () => {
-      this.showExportOptions();
-    });
-    
-    // 笔记列表操作事件代理
+    // 选择模式事件监听
     document.addEventListener('click', (e) => {
-      // 删除笔记
-      if (e.target.classList.contains('delete-note')) {
+      // 点击复选框
+      if (e.target.classList.contains('note-checkbox')) {
+        e.stopPropagation();
+        const noteId = parseInt(e.target.dataset.id);
+        this.toggleNoteSelection(noteId);
+        return;
+      }
+      
+      // 点击删除按钮
+      if (e.target.classList.contains('delete-btn')) {
+        e.stopPropagation();
         const noteId = parseInt(e.target.dataset.id);
         this.deleteNote(noteId);
-      } 
-      // 编辑标签
-      else if (e.target.classList.contains('edit-tags')) {
-        const noteId = parseInt(e.target.dataset.id);
-        this.editNoteTags(noteId);
+        return;
       }
-      // 编辑笔记
-      else if (e.target.classList.contains('edit-note')) {
-        const noteId = parseInt(e.target.dataset.id);
+      
+      // 选择模式下点击笔记卡片
+      if (this.data.selectionMode) {
+        const noteItem = e.target.closest('.note-item');
+        if (noteItem) {
+          const noteId = parseInt(noteItem.dataset.id);
+          this.toggleNoteSelection(noteId);
+        }
+        return;
+      }
+      
+      // 点击链接不触发编辑
+      if (e.target.classList.contains('note-url')) {
+        return;
+      }
+      
+      // 点击笔记卡片打开编辑
+      const noteItem = e.target.closest('.note-item');
+      if (noteItem && !e.target.classList.contains('action-btn')) {
+        const noteId = parseInt(noteItem.dataset.id);
         this.openEditModal(noteId);
       }
     });
     
     // 监听主题变更消息
-    chrome.runtime.onMessage.addListener((request) => {
-      if (request.type === 'update_theme') {
-        this.applyTheme(request.theme);
-      }
-    });
+    if (chrome?.runtime?.onMessage) {
+      chrome.runtime.onMessage.addListener((request) => {
+        if (request.type === 'update_theme') {
+          this.applyTheme(request.theme);
+        }
+        // Listen for new note saved from content script
+        if (request.type === 'note_saved') {
+          this.refreshNotesList();
+        }
+      });
+    }
+    
+    // Listen for storage changes to update notes in real-time
+    if (chrome?.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'local' && changes.notes) {
+          const newNotes = changes.notes.newValue;
+          const oldNotes = changes.notes.oldValue || [];
+          
+          // Check if a new note was added
+          if (newNotes && newNotes.length > oldNotes.length) {
+            console.log('[Mindful Words] New note detected, refreshing list');
+            this.data.notes = newNotes;
+            this.renderNotes(newNotes);
+            this.showNewNoteIndicator();
+          }
+        }
+      });
+    }
     
     // 监听滚动事件，保存滚动位置
     let scrollTimeout;
@@ -133,14 +237,105 @@ const PopupManager = {
     
     // ESC键关闭模态框
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.elements.editModal.style.display === 'flex') {
-        this.closeEditModal();
+      if (e.key === 'Escape') {
+        if (this.elements.editModal.style.display === 'flex') {
+          this.closeEditModal();
+        } else if (this.elements.confirmModal.style.display === 'flex') {
+          this.closeConfirmModal();
+        } else if (this.elements.tagsModal.style.display === 'flex') {
+          this.closeTagsModal();
+        }
       }
+    });
+    
+    // 确认对话框事件监听
+    this.elements.confirmCancel.addEventListener('click', () => {
+      this.closeConfirmModal();
+    });
+    
+    this.elements.confirmOk.addEventListener('click', () => {
+      const callback = this.data.confirmCallback;
+      this.closeConfirmModal();
+      if (callback) callback();
+    });
+    
+    this.elements.confirmModal.addEventListener('click', (e) => {
+      if (e.target === this.elements.confirmModal) {
+        this.closeConfirmModal();
+      }
+    });
+    
+    // 标签编辑对话框事件监听
+    this.elements.closeTagsModal.addEventListener('click', () => {
+      this.closeTagsModal();
+    });
+    
+    this.elements.cancelTags.addEventListener('click', () => {
+      this.closeTagsModal();
+    });
+    
+    this.elements.saveTags.addEventListener('click', () => {
+      this.saveTagsEdit();
+    });
+    
+    this.elements.tagsModal.addEventListener('click', (e) => {
+      if (e.target === this.elements.tagsModal) {
+        this.closeTagsModal();
+      }
+    });
+
+    // 选择模式事件监听
+    this.elements.selectBtn.addEventListener('click', () => {
+      this.toggleSelectionMode();
+    });
+    
+    this.elements.selectAllCheckbox.addEventListener('change', (e) => {
+      this.toggleSelectAll(e.target.checked);
+    });
+    
+    this.elements.copySelectedBtn.addEventListener('click', () => {
+      this.copySelectedNotes();
+    });
+    
+    this.elements.exportSelectedBtn.addEventListener('click', () => {
+      this.showExportOptions();
+    });
+    
+    this.elements.deleteSelectedBtn.addEventListener('click', () => {
+      this.deleteSelectedNotes();
+    });
+    
+    this.elements.cancelSelectionBtn.addEventListener('click', () => {
+      this.exitSelectionMode();
+    });
+    
+    // 筛选按钮事件监听
+    this.elements.filterTagsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.showFilterDropdown('tags');
+    });
+    
+    this.elements.filterTimeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.showFilterDropdown('time');
+    });
+    
+    this.elements.filterSourceBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.showFilterDropdown('source');
+    });
+    
+    this.elements.clearFiltersBtn.addEventListener('click', () => {
+      this.clearAllFilters();
     });
   },
   
   // 从存储加载设置
   loadSettings() {
+    if (!chrome?.storage?.local) {
+      console.error('Chrome storage API not available');
+      return;
+    }
     chrome.storage.local.get(['settings'], (result) => {
       if (chrome.runtime.lastError) {
         console.error('加载设置失败:', chrome.runtime.lastError);
@@ -167,13 +362,71 @@ const PopupManager = {
         this.data.notes = loadedNotes;
         this.renderNotes(loadedNotes);
       } else {
-        this.elements.notesList.innerHTML = '<p style="text-align: center; padding: 20px;">暂无笔记</p>';
+        this.elements.notesList.innerHTML = `<p style="text-align: center; padding: 20px;">${this.i18n('noNotes')}</p>`;
       }
     });
   },
   
+  // Refresh notes list (for real-time updates)
+  refreshNotesList() {
+    if (!chrome?.storage?.local) return;
+    chrome.storage.local.get(['notes'], (result) => {
+      if (chrome.runtime.lastError) return;
+      if (result.notes && Array.isArray(result.notes)) {
+        this.data.notes = result.notes;
+        this.renderNotes(result.notes);
+        this.showNewNoteIndicator();
+      }
+    });
+  },
+  
+  // Show indicator when new note is added
+  showNewNoteIndicator() {
+    const indicator = document.createElement('div');
+    indicator.className = 'new-note-indicator';
+    indicator.textContent = this.i18n('newNoteAdded');
+    indicator.style.cssText = `
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4CAF50;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 10000;
+      animation: fadeInOut 2s ease-in-out forwards;
+    `;
+    
+    // Add animation style if not exists
+    if (!document.getElementById('new-note-indicator-style')) {
+      const style = document.createElement('style');
+      style.id = 'new-note-indicator-style';
+      style.textContent = `
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+          20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+          80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(indicator);
+    
+    setTimeout(() => {
+      indicator.remove();
+    }, 2000);
+  },
+  
   // 带重试功能的数据加载
   loadDataWithRetry(key, callback, attempt = 1) {
+    if (!chrome?.storage?.local) {
+      this.elements.notesList.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">扩展上下文已失效，请刷新页面</p>';
+      return;
+    }
     chrome.storage.local.get([key], (result) => {
       if (chrome.runtime.lastError) {
         console.error(`存储获取失败(尝试 ${attempt}):`, chrome.runtime.lastError);
@@ -181,14 +434,18 @@ const PopupManager = {
           setTimeout(() => this.loadDataWithRetry(key, callback, attempt + 1), 500);
         } else {
           // 最后一次失败后尝试从chrome.storage.sync加载
-          chrome.storage.sync.get([key], (syncResult) => {
-            if (chrome.runtime.lastError) {
-              console.error('同步存储加载也失败:', chrome.runtime.lastError);
-              this.elements.notesList.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">笔记加载失败，请检查扩展权限或刷新页面</p>';
-            } else {
-              callback(syncResult[key]);
-            }
-          });
+          if (chrome?.storage?.sync) {
+            chrome.storage.sync.get([key], (syncResult) => {
+              if (chrome.runtime.lastError) {
+                console.error('同步存储加载也失败:', chrome.runtime.lastError);
+                this.elements.notesList.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">${this.i18n('loadFailed')}</p>`;
+              } else {
+                callback(syncResult[key]);
+              }
+            });
+          } else {
+            this.elements.notesList.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">${this.i18n('loadFailed')}</p>`;
+          }
         }
         return;
       }
@@ -201,20 +458,45 @@ const PopupManager = {
   renderNotes(notes) {
     if (!this.elements.notesList) return;
     
-    const notesToRender = notes || (this.data.searchQuery ? this.data.filteredNotes : this.data.notes);
+    let notesToRender = notes;
+    if (!notesToRender) {
+      if (this.data.searchQuery || this.hasActiveFilters()) {
+        notesToRender = this.data.filteredNotes;
+      } else {
+        notesToRender = this.data.notes;
+      }
+    }
     
     if (!notesToRender || notesToRender.length === 0) {
-      const message = this.data.searchQuery ? '没有找到匹配的笔记' : '还没有保存任何笔记';
+      let message = this.i18n('noNotes');
+      let hint = this.i18n('noNotesHint');
+      
+      if (this.data.searchQuery && this.hasActiveFilters()) {
+        message = this.i18n('noMatchingNotes');
+        hint = this.i18n('tryOtherKeywords');
+      } else if (this.data.searchQuery) {
+        message = this.i18n('noMatchingNotes');
+        hint = this.i18n('tryOtherKeywords');
+      } else if (this.hasActiveFilters()) {
+        message = this.i18n('noFilteredNotes');
+        hint = this.i18n('adjustFilters');
+      }
+      
       this.elements.notesList.innerHTML = `
-        <div class="hint-text">
-          <p>${message}</p>
-          ${!this.data.searchQuery ? '<p>在网页上按住Ctrl并选择文本即可保存</p>' : ''}
+        <div class="empty-state">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <p class="empty-title">${message}</p>
+          <p class="empty-hint">${hint}</p>
         </div>
       `;
       return;
     }
     
-    // 按时间排序，最新的在前面
     const sortedNotes = [...notesToRender].sort((a, b) => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
@@ -240,11 +522,16 @@ const PopupManager = {
         const url = new URL(note.url);
         displayUrl = url.hostname.replace('www.', '');
       } catch (e) {
-        displayUrl = '网页';
+        displayUrl = this.i18n('webpage');
       }
       
+      const isSelected = this.data.selectedNoteIds.has(note.id);
+      const hasCheckboxClass = this.data.selectionMode ? 'has-checkbox' : '';
+      const selectedClass = isSelected ? 'selected' : '';
+      
       html += `
-        <div class="note-item" data-id="${note.id}">
+        <div class="note-item ${hasCheckboxClass} ${selectedClass}" data-id="${note.id}">
+          ${this.data.selectionMode ? `<input type="checkbox" class="note-checkbox" ${isSelected ? 'checked' : ''} data-id="${note.id}">` : ''}
           <div class="note-content">${this.formatContent(note.content)}</div>
           ${noteHtml}
           ${tagsHtml}
@@ -252,9 +539,7 @@ const PopupManager = {
             ${formattedDate} · 
             <a href="${note.url}" target="_blank" class="note-url" title="${note.url}">${displayUrl}</a>
             <span class="spacer"></span>
-            <span class="edit-note" data-id="${note.id}" title="编辑笔记">编辑</span>
-            <span class="edit-tags" data-id="${note.id}" title="编辑标签">标签</span>
-            <span class="delete-note" data-id="${note.id}" title="删除笔记">删除</span>
+            ${!this.data.selectionMode ? `<span class="action-btn delete-btn" data-id="${note.id}" title="${this.i18n('deleteNote')}">${this.i18n('btnDelete')}</span>` : ''}
           </div>
         </div>
       `;
@@ -282,76 +567,65 @@ const PopupManager = {
     return content;
   },
   
+  sendMessage(message) {
+    return new Promise((resolve, reject) => {
+      if (!chrome?.runtime?.sendMessage) {
+        reject(new Error('Extension context invalidated. Please reload the extension.'));
+        return;
+      }
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message || 'Extension communication error'));
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  },
+  
   // 删除笔记
   deleteNote(noteId) {
-    if (confirm('确定要删除这条笔记吗？')) {
-      chrome.runtime.sendMessage({
-        type: 'delete_note',
-        id: noteId
-      }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.error('删除请求失败:', chrome.runtime.lastError);
-          alert('删除失败，请刷新页面后重试');
-          return;
-        }
+    this.showConfirm(this.i18n('confirmDelete'), this.i18n('confirmDeleteMessage'), async () => {
+      try {
+        const response = await this.sendMessage({
+          type: 'delete_note',
+          id: noteId
+        });
         
         if (response && response.status === 'success') {
-          // 更新本地数据
           this.data.notes = this.data.notes.filter(n => n.id !== noteId);
           this.renderNotes(this.data.notes);
         } else {
-          alert(response?.message || '删除失败，请重试');
+          this.showToast(response?.message || this.i18n('deleteFailed'), 'error');
         }
-      });
-    }
+      } catch (error) {
+        console.error('Delete request failed:', error);
+        this.showToast(this.i18n('deleteFailed'), 'error');
+      }
+    });
   },
   
   // 编辑笔记标签
   editNoteTags(noteId) {
     const note = this.data.notes.find(n => n.id === noteId);
     if (!note) {
-      alert('找不到指定笔记');
+      this.showToast(this.i18n('noteNotFound'), 'error');
       return;
     }
     
-    // 显示标签编辑对话框
-    const tagsInput = prompt('编辑标签(用逗号分隔)', note.tags ? note.tags.join(', ') : '');
-    if (tagsInput === null) return; // 用户取消
+    this.data.editingTagsNoteId = noteId;
+    this.elements.tagsInput.value = note.tags ? note.tags.join(', ') : '';
+    this.elements.tagsModal.style.display = 'flex';
     
-    // 处理标签输入
-    const newTags = tagsInput.split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0);
-    
-    // 更新笔记
-    chrome.runtime.sendMessage({
-      type: 'update_tags',
-      id: noteId,
-      tags: newTags
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error('更新标签请求失败:', chrome.runtime.lastError);
-        alert('更新标签失败，请刷新页面后重试');
-        return;
-      }
-      
-      if (response && response.status === 'success') {
-        // 更新本地数据
-        const noteIndex = this.data.notes.findIndex(n => n.id === noteId);
-        if (noteIndex !== -1) {
-          this.data.notes[noteIndex].tags = newTags;
-          this.renderNotes(this.data.notes);
-        }
-      } else {
-        alert(response?.message || '标签更新失败');
-      }
-    });
+    setTimeout(() => {
+      this.elements.tagsInput.focus();
+    }, 100);
   },
   
   // 显示导出选项
   showExportOptions() {
     if (!this.data.notes || this.data.notes.length === 0) {
-      alert('没有可导出的笔记');
+      alert(this.i18n('noNotes'));
       return;
     }
     
@@ -365,7 +639,7 @@ const PopupManager = {
     const exportMenu = document.createElement('div');
     exportMenu.className = 'export-menu';
     exportMenu.innerHTML = `
-      <div class="export-menu-header">导出选项</div>
+      <div class="export-menu-header">${this.i18n('exportOptions')}</div>
       <div class="export-options">
         <div class="export-option export-option-ai" data-format="ai">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -374,8 +648,19 @@ const PopupManager = {
             <path d="M12 8h.01"></path>
           </svg>
           <div class="option-content">
-            <span class="option-label">AI 练习模式</span>
-            <span class="option-desc">适合粘贴到豆包、千问等 AI 应用</span>
+            <span class="option-label">${this.i18n('exportAI')}</span>
+            <span class="option-desc">${this.i18n('exportAIDesc')}</span>
+          </div>
+        </div>
+        <div class="export-option" data-format="apkg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <div class="option-content">
+            <span class="option-label">${this.i18n('exportAnki')}</span>
+            <span class="option-desc">${this.i18n('exportAnkiDesc')}</span>
           </div>
         </div>
         <div class="export-option" data-format="json">
@@ -387,8 +672,8 @@ const PopupManager = {
             <path d="M16 18v-3"></path>
           </svg>
           <div class="option-content">
-            <span class="option-label">JSON 格式</span>
-            <span class="option-desc">导出完整数据结构</span>
+            <span class="option-label">${this.i18n('exportJSON')}</span>
+            <span class="option-desc">${this.i18n('exportJSONDesc')}</span>
           </div>
         </div>
         <div class="export-option" data-format="csv">
@@ -400,8 +685,8 @@ const PopupManager = {
             <line x1="10" y1="9" x2="8" y2="9"></line>
           </svg>
           <div class="option-content">
-            <span class="option-label">CSV 格式</span>
-            <span class="option-desc">适用于电子表格软件</span>
+            <span class="option-label">${this.i18n('exportCSV')}</span>
+            <span class="option-desc">${this.i18n('exportCSVDesc')}</span>
           </div>
         </div>
         <div class="export-option" data-format="txt">
@@ -412,100 +697,12 @@ const PopupManager = {
             <line x1="16" y1="17" x2="8" y2="17"></line>
           </svg>
           <div class="option-content">
-            <span class="option-label">TXT 格式</span>
-            <span class="option-desc">纯文本，适用于任何环境</span>
+            <span class="option-label">${this.i18n('exportTXT')}</span>
+            <span class="option-desc">${this.i18n('exportTXTDesc')}</span>
           </div>
         </div>
       </div>
     `;
-    
-    // 添加菜单样式
-    const style = document.createElement('style');
-    style.textContent = `
-      .export-menu {
-        position: absolute;
-        top: 64px;
-        right: 20px;
-        background: var(--bg-color);
-        border-radius: 12px;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
-        z-index: 1000;
-        overflow: hidden;
-        width: 280px;
-        animation: fadeIn 0.2s ease-out;
-        border: 1px solid var(--border-color);
-      }
-      
-      .export-menu-header {
-        padding: 14px 16px;
-        font-size: 15px;
-        font-weight: 500;
-        border-bottom: 1px solid var(--border-color);
-        color: var(--text-color);
-      }
-      
-      .export-options {
-        padding: 8px 0;
-      }
-      
-      .export-option {
-        padding: 10px 16px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        cursor: pointer;
-        color: var(--text-color);
-        transition: all 0.2s ease;
-      }
-      
-      .export-option:hover {
-        background-color: var(--hover-bg-color);
-      }
-      
-      .export-option svg {
-        color: var(--accent-color);
-        opacity: 0.9;
-      }
-      
-      .option-content {
-        display: flex;
-        flex-direction: column;
-      }
-      
-      .option-label {
-        font-size: 14px;
-        font-weight: 500;
-      }
-      
-      .option-desc {
-        font-size: 12px;
-        color: var(--secondary-text);
-        margin-top: 2px;
-      }
-      
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      
-      .export-menu-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 999;
-        background-color: rgba(0, 0, 0, 0.06);
-        backdrop-filter: blur(2px);
-        animation: fadeBackdrop 0.2s ease-out;
-      }
-      
-      @keyframes fadeBackdrop {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-    `;
-    document.head.appendChild(style);
     
     // 创建背景遮罩（用于捕获点击事件关闭菜单）
     const backdrop = document.createElement('div');
@@ -515,12 +712,14 @@ const PopupManager = {
     
     // 处理导出选项点击
     exportMenu.querySelectorAll('.export-option').forEach(option => {
-      option.addEventListener('click', (e) => {
+      option.addEventListener('click', async (e) => {
         const format = e.currentTarget.dataset.format;
         
         if (format === 'ai') {
           const aiText = this.generateAIExport(this.data.notes);
           this.copyToClipboard(aiText);
+        } else if (format === 'apkg') {
+          await this.exportNotesAsApkg(this.data.notes);
         } else if (format === 'json') {
           this.exportNotesAsJSON(this.data.notes);
         } else if (format === 'csv') {
@@ -532,7 +731,6 @@ const PopupManager = {
         // 关闭菜单
         exportMenu.remove();
         backdrop.remove();
-        style.remove();
       });
     });
     
@@ -540,7 +738,6 @@ const PopupManager = {
     backdrop.addEventListener('click', () => {
       exportMenu.remove();
       backdrop.remove();
-      style.remove();
     });
   },
   
@@ -551,19 +748,18 @@ const PopupManager = {
     this.downloadFile(blob, 'mindful_notes.json');
   },
   
-  // 导出笔记为CSV
   exportNotesAsCSV(notes) {
-    const headers = ['内容', '标题', '来源URL', '标签', '创建时间', '更新时间'];
+    const headers = [this.i18n('contentLabel').replace(':', ''), this.i18n('personalNoteLabel').replace(':', ''), 'Title', 'URL', this.i18n('filterTags'), this.i18n('time') + ' Created', this.i18n('time') + ' Updated'];
     const csvRows = [];
     
-    // 添加表头
     csvRows.push(headers.join(','));
     
-    // 添加数据行
     notes.forEach(note => {
       const tags = note.tags ? note.tags.join(';') : '';
+      const noteText = note.note || '';
       const row = [
         `"${note.content.replace(/"/g, '""')}"`,
+        `"${noteText.replace(/"/g, '""')}"`,
         `"${note.title.replace(/"/g, '""')}"`,
         `"${note.url}"`,
         `"${tags}"`,
@@ -578,23 +774,41 @@ const PopupManager = {
     this.downloadFile(blob, 'mindful_notes.csv');
   },
   
-  // 导出笔记为TXT
   exportNotesAsTXT(notes) {
     let txtContent = '';
     
     notes.forEach((note, index) => {
       const tags = note.tags && note.tags.length > 0 ? `[${note.tags.join(', ')}]` : '';
       
-      txtContent += `--- 笔记 ${index + 1} ---\n`;
+      txtContent += `--- ${this.i18n('noteNumber', [(index + 1).toString()])} ---\n`;
       txtContent += `${note.content}\n\n`;
-      txtContent += `标签: ${tags}\n`;
-      txtContent += `来源: ${note.url}\n`;
-      txtContent += `时间: ${new Date(note.createdAt).toLocaleString()}\n`;
+      txtContent += `${this.i18n('filterTags')}: ${tags}\n`;
+      txtContent += `${this.i18n('source')}: ${note.url}\n`;
+      txtContent += `${this.i18n('time')}: ${new Date(note.createdAt).toLocaleString()}\n`;
       txtContent += `\n\n`;
     });
     
     const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
     this.downloadFile(blob, 'mindful_notes.txt');
+  },
+  
+  // Export notes as Anki .apkg file
+  async exportNotesAsApkg(notes) {
+    try {
+      const success = await ApkgGenerator.init();
+      if (!success) {
+        this.showToast(this.i18n('exportAnkiFailed'), 'error');
+        return;
+      }
+      
+      const blob = await ApkgGenerator.generateApkg(notes);
+      ApkgGenerator.downloadApkg(blob, 'mindful_words.apkg');
+      
+      this.showToast(this.i18n('dataExported'));
+    } catch (error) {
+      console.error('[Mindful Words] Anki export failed:', error);
+      this.showToast(this.i18n('exportAnkiFailed'), 'error');
+    }
   },
   
   // 下载文件
@@ -623,7 +837,7 @@ const PopupManager = {
         item += `\n   来源：${note.title}`;
       }
       if (note.note && note.note.trim()) {
-        item += `\n   笔记：${note.note}`;
+        item += `\n   ${this.i18n('personalNote')}：${note.note}`;
       }
       return item;
     }).join('\n\n');
@@ -643,32 +857,27 @@ const PopupManager = {
   async copyToClipboard(text) {
     try {
       await navigator.clipboard.writeText(text);
-      this.showCopySuccess();
+      this.showToast(this.i18n('copiedToClipboard'));
       return true;
     } catch (err) {
-      console.error('复制失败:', err);
+      console.error('Copy failed:', err);
+      this.showToast(this.i18n('copyFailed'), 'error');
       return false;
     }
   },
   
   // 显示复制成功提示
   showCopySuccess() {
-    const toast = document.createElement('div');
-    toast.className = 'copy-toast';
-    toast.textContent = '已复制到剪贴板';
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.classList.add('fade-out');
-      setTimeout(() => toast.remove(), 300);
-    }, 2000);
+    this.showToast('已复制到剪贴板');
   },
   
   // 保存滚动位置
   saveScrollPosition() {
     try {
       const scrollTop = this.elements.notesList.scrollTop;
-      chrome.storage.local.set({ 'popup_scroll_position': scrollTop });
+      if (chrome?.storage?.local) {
+        chrome.storage.local.set({ 'popup_scroll_position': scrollTop });
+      }
     } catch (error) {
       console.error('保存滚动位置失败:', error);
     }
@@ -677,6 +886,7 @@ const PopupManager = {
   // 恢复滚动位置
   restoreScrollPosition() {
     try {
+      if (!chrome?.storage?.local) return;
       chrome.storage.local.get(['popup_scroll_position'], (result) => {
         if (result.popup_scroll_position !== undefined) {
           // 稍微延迟以确保DOM已渲染
@@ -693,30 +903,7 @@ const PopupManager = {
   // 搜索笔记
   searchNotes(query) {
     this.data.searchQuery = query.trim();
-    
-    if (!this.data.searchQuery) {
-      this.data.filteredNotes = [];
-      this.renderNotes();
-      return;
-    }
-    
-    const searchTerm = this.data.searchQuery.toLowerCase();
-    this.data.filteredNotes = this.data.notes.filter(note => {
-      // 搜索内容
-      const contentMatch = note.content.toLowerCase().includes(searchTerm);
-      
-      // 搜索标签
-      const tagsMatch = note.tags && note.tags.some(tag => 
-        tag.toLowerCase().includes(searchTerm)
-      );
-      
-      // 搜索URL
-      const urlMatch = note.url && note.url.toLowerCase().includes(searchTerm);
-      
-      return contentMatch || tagsMatch || urlMatch;
-    });
-    
-    this.renderNotes();
+    this.applyFilters();
   },
   
   // 打开编辑模态框
@@ -749,7 +936,7 @@ const PopupManager = {
   },
   
   // 保存笔记编辑
-  saveNoteEdit() {
+  async saveNoteEdit() {
     if (!this.data.currentEditingNote) {
       console.error('没有正在编辑的笔记');
       return;
@@ -757,7 +944,7 @@ const PopupManager = {
     
     const content = this.elements.editContent.value.trim();
     if (!content) {
-      alert('笔记内容不能为空');
+      alert(this.i18n('contentCannotBeEmpty'));
       return;
     }
     
@@ -775,16 +962,12 @@ const PopupManager = {
     };
     
     // 发送更新消息到background
-    chrome.runtime.sendMessage({
-      type: 'update_note',
-      id: this.data.currentEditingNote.id,
-      noteData: updatedNote
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error('更新笔记失败:', chrome.runtime.lastError);
-        alert('更新笔记失败，请重试');
-        return;
-      }
+    try {
+      const response = await this.sendMessage({
+        type: 'update_note',
+        id: this.data.currentEditingNote.id,
+        noteData: updatedNote
+      });
       
       if (response && response.status === 'success') {
         // 更新本地数据
@@ -802,9 +985,807 @@ const PopupManager = {
         
         this.closeEditModal();
       } else {
-        alert('更新笔记失败，请重试');
+        this.showToast(this.i18n('updateFailed'), 'error');
+      }
+    } catch (error) {
+      console.error('更新笔记失败:', error);
+      alert(this.i18n('updateFailed'));
+    }
+  },
+  
+  // 显示确认对话框
+  showConfirm(title, message, callback) {
+    this.elements.confirmTitle.textContent = title;
+    this.elements.confirmMessage.textContent = message;
+    this.data.confirmCallback = callback;
+    this.elements.confirmModal.style.display = 'flex';
+  },
+  
+  // 关闭确认对话框
+  closeConfirmModal() {
+    this.elements.confirmModal.style.display = 'none';
+    this.data.confirmCallback = null;
+  },
+  
+  // 关闭标签编辑对话框
+  closeTagsModal() {
+    this.elements.tagsModal.style.display = 'none';
+    this.data.editingTagsNoteId = null;
+    this.elements.tagsInput.value = '';
+  },
+  
+  // 保存标签编辑
+  async saveTagsEdit() {
+    if (!this.data.editingTagsNoteId) {
+      console.error('没有正在编辑标签的笔记');
+      return;
+    }
+    
+    const tagsInput = this.elements.tagsInput.value.trim();
+    const newTags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+    
+    try {
+      const response = await this.sendMessage({
+        type: 'update_tags',
+        id: this.data.editingTagsNoteId,
+        tags: newTags
+      });
+      
+      if (response && response.status === 'success') {
+        const noteIndex = this.data.notes.findIndex(n => n.id === this.data.editingTagsNoteId);
+        if (noteIndex !== -1) {
+          this.data.notes[noteIndex].tags = newTags;
+          this.renderNotes(this.data.notes);
+        }
+        this.closeTagsModal();
+      } else {
+        this.showToast(response?.message || '标签更新失败', 'error');
+      }
+    } catch (error) {
+      console.error('更新标签请求失败:', error);
+      this.showToast(this.i18n('updateFailed'), 'error');
+    }
+  },
+  
+  // 显示提示消息
+  showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `copy-toast ${type === 'error' ? 'toast-error' : ''}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.remove(), 300);
+    }, 2000);
+  },
+  
+  // 切换选择模式
+  toggleSelectionMode() {
+    this.data.selectionMode = !this.data.selectionMode;
+    
+    if (this.data.selectionMode) {
+      this.elements.selectionBar.classList.remove('hidden');
+      this.elements.selectBtn.classList.add('active');
+      this.data.selectedNoteIds.clear();
+    } else {
+      this.exitSelectionMode();
+    }
+    
+    this.renderNotes();
+    this.updateSelectionUI();
+  },
+  
+  // 退出选择模式
+  exitSelectionMode() {
+    this.data.selectionMode = false;
+    this.data.selectedNoteIds.clear();
+    this.elements.selectionBar.classList.add('hidden');
+    this.elements.selectBtn.classList.remove('active');
+    this.elements.selectAllCheckbox.checked = false;
+    this.renderNotes();
+    this.updateSelectionUI();
+  },
+  
+  // 切换全选
+  toggleSelectAll(checked) {
+    if (checked) {
+      this.data.notes.forEach(note => {
+        this.data.selectedNoteIds.add(note.id);
+      });
+    } else {
+      this.data.selectedNoteIds.clear();
+    }
+    this.renderNotes();
+    this.updateSelectionUI();
+  },
+  
+  // 切换单个笔记选择
+  toggleNoteSelection(noteId) {
+    if (this.data.selectedNoteIds.has(noteId)) {
+      this.data.selectedNoteIds.delete(noteId);
+    } else {
+      this.data.selectedNoteIds.add(noteId);
+    }
+    this.renderNotes();
+    this.updateSelectionUI();
+  },
+  
+  // 更新选择UI
+  updateSelectionUI() {
+    const count = this.data.selectedNoteIds.size;
+    this.elements.selectionCount.textContent = this.i18n('selectedCount', [count.toString()]);
+    this.elements.selectAllCheckbox.checked = count === this.data.notes.length && count > 0;
+    this.elements.copySelectedBtn.disabled = count === 0;
+    this.elements.exportSelectedBtn.disabled = count === 0;
+    this.elements.deleteSelectedBtn.disabled = count === 0;
+  },
+  
+  // 复制选中的笔记
+  copySelectedNotes() {
+    const selectedNotes = this.data.notes.filter(note => 
+      this.data.selectedNoteIds.has(note.id)
+    );
+    
+    if (selectedNotes.length === 0) {
+      this.showToast(this.i18n('selectNotesFirst'), 'error');
+      return;
+    }
+    
+    const text = this.formatNotesForCopy(selectedNotes);
+    this.copyToClipboard(text);
+  },
+  
+  deleteSelectedNotes() {
+    const count = this.data.selectedNoteIds.size;
+    if (count === 0) {
+      this.showToast(this.i18n('selectNotesFirst'), 'error');
+      return;
+    }
+    
+    this.showConfirm(
+      this.i18n('confirmDelete'),
+      this.i18n('confirmBatchDeleteMessage', [count.toString()]),
+      async () => {
+        try {
+          const selectedIds = Array.from(this.data.selectedNoteIds);
+          const response = await this.sendMessage({
+            type: 'delete_notes',
+            ids: selectedIds
+          });
+          
+          if (response && response.status === 'success') {
+            this.data.notes = this.data.notes.filter(n => !this.data.selectedNoteIds.has(n.id));
+            this.exitSelectionMode();
+            this.renderNotes(this.data.notes);
+            this.showToast(this.i18n('deleted', [count.toString()]));
+          } else {
+            this.showToast(response?.message || this.i18n('deleteFailed'), 'error');
+          }
+        } catch (error) {
+          console.error('Batch delete failed:', error);
+          this.showToast(this.i18n('deleteFailed'), 'error');
+        }
+      }
+    );
+  },
+  
+  formatNotesForCopy(notes) {
+    return notes.map(note => {
+    let text = note.content;
+    if (note.note && note.note.trim()) {
+      text += `\n\n${this.i18n('personalNote')}: ${note.note}`;
+    }
+    if (note.tags && note.tags.length > 0) {
+      text += `\n${this.i18n('filterTags')}: ${note.tags.join(', ')}`;
+    }
+    return text;
+  }).join('\n\n---\n\n');
+  },
+  
+  // 显示导出选项
+  showExportOptions() {
+    const notesToExport = this.data.notes.filter(note => 
+      this.data.selectedNoteIds.has(note.id)
+    );
+    
+    if (!notesToExport || notesToExport.length === 0) {
+      this.showToast(this.i18n('selectNotesFirst'), 'error');
+      return;
+    }
+    
+    // 移除可能已存在的导出菜单
+    const existingMenu = document.querySelector('.export-menu');
+    if (existingMenu) {
+      existingMenu.remove();
+    }
+    
+    const existingBackdrop = document.querySelector('.export-menu-backdrop');
+    if (existingBackdrop) {
+      existingBackdrop.remove();
+    }
+    
+    // 创建导出菜单
+    const exportMenu = document.createElement('div');
+    exportMenu.className = 'export-menu';
+    exportMenu.innerHTML = `
+      <div class="export-menu-header">${this.i18n('exportOptions')}</div>
+      <div class="export-options">
+        <div class="export-option" data-format="apkg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <div class="option-content">
+            <span class="option-label">${this.i18n('exportAnki')}</span>
+            <span class="option-desc">${this.i18n('exportAnkiDesc')}</span>
+          </div>
+        </div>
+        <div class="export-option" data-format="json">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <div class="option-content">
+            <span class="option-label">${this.i18n('exportJSON')}</span>
+            <span class="option-desc">${this.i18n('exportJSONDesc')}</span>
+          </div>
+        </div>
+        <div class="export-option" data-format="csv">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <div class="option-content">
+            <span class="option-label">${this.i18n('exportCSV')}</span>
+            <span class="option-desc">${this.i18n('exportCSVDesc')}</span>
+          </div>
+        </div>
+        <div class="export-option" data-format="txt">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <div class="option-content">
+            <span class="option-label">${this.i18n('exportTXT')}</span>
+            <span class="option-desc">${this.i18n('exportTXTDesc')}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // 创建背景遮罩
+    const backdrop = document.createElement('div');
+    backdrop.className = 'export-menu-backdrop';
+    document.body.appendChild(backdrop);
+    document.body.appendChild(exportMenu);
+    
+    // 处理导出选项点击
+    exportMenu.querySelectorAll('.export-option').forEach(option => {
+      option.addEventListener('click', async (e) => {
+        const format = e.currentTarget.dataset.format;
+        
+        if (format === 'apkg') {
+          await this.exportNotesAsApkg(notesToExport);
+        } else if (format === 'json') {
+          this.exportNotesAsJSON(notesToExport);
+        } else if (format === 'csv') {
+          this.exportNotesAsCSV(notesToExport);
+        } else if (format === 'txt') {
+          this.exportNotesAsTXT(notesToExport);
+        }
+        
+        exportMenu.remove();
+        backdrop.remove();
+      });
+    });
+    
+    // 点击背景关闭菜单
+    backdrop.addEventListener('click', () => {
+      exportMenu.remove();
+      backdrop.remove();
+    });
+  },
+  
+  // 导出笔记为JSON
+  exportNotesAsJSON(notes) {
+    const data = JSON.stringify(notes, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    this.downloadFile(blob, 'mindful_notes.json');
+  },
+  
+  // 导出笔记为CSV
+  exportNotesAsCSV(notes) {
+    const headers = ['Content', 'Personal Note', 'Title', 'Source URL', 'Tags', 'Created', 'Updated'];
+    const csvRows = [];
+    
+    csvRows.push(headers.join(','));
+    
+    notes.forEach(note => {
+      const tags = note.tags ? note.tags.join(';') : '';
+      const noteText = note.note || '';
+      const row = [
+        `"${note.content.replace(/"/g, '""')}"`,
+        `"${noteText.replace(/"/g, '""')}"`,
+        `"${note.title.replace(/"/g, '""')}"`,
+        `"${note.url}"`,
+        `"${tags}"`,
+        `"${note.createdAt}"`,
+        `"${note.updatedAt}"`
+      ];
+      csvRows.push(row.join(','));
+    });
+    
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    this.downloadFile(blob, 'mindful_notes.csv');
+  },
+  
+  // 导出笔记为TXT
+  exportNotesAsTXT(notes) {
+    let txtContent = '';
+    
+    notes.forEach((note, index) => {
+      const tags = note.tags && note.tags.length > 0 ? `[${note.tags.join(', ')}]` : '';
+      
+      txtContent += `--- 笔记 ${index + 1} ---\n`;
+      txtContent += `${note.content}\n\n`;
+      if (note.note && note.note.trim()) {
+        txtContent += `${this.i18n('personalNote')}: ${note.note}\n\n`;
+      }
+      txtContent += `${this.i18n('filterTags')}: ${tags}\n`;
+      txtContent += `${this.i18n('source')}: ${note.url}\n`;
+      txtContent += `${this.i18n('time')}: ${new Date(note.createdAt).toLocaleString()}\n`;
+      txtContent += `\n\n`;
+    });
+    
+    const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
+    this.downloadFile(blob, 'mindful_notes.txt');
+  },
+  
+  // 下载文件
+  downloadFile(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  },
+  
+  // 显示筛选下拉面板
+  showFilterDropdown(type) {
+    this.closeAllFilterDropdowns();
+    
+    const btn = type === 'tags' ? this.elements.filterTagsBtn 
+              : type === 'time' ? this.elements.filterTimeBtn 
+              : this.elements.filterSourceBtn;
+    
+    const rect = btn.getBoundingClientRect();
+    
+    let dropdown;
+    if (type === 'tags') {
+      dropdown = this.createTagsDropdown();
+    } else if (type === 'time') {
+      dropdown = this.createTimeDropdown();
+    } else {
+      dropdown = this.createSourceDropdown();
+    }
+    
+    dropdown.className = 'filter-dropdown';
+    dropdown.style.top = `${rect.bottom + 4}px`;
+    dropdown.style.left = `${rect.left}px`;
+    
+    document.body.appendChild(dropdown);
+    btn.classList.add('active');
+    
+    this._currentFilterCloseHandler = (e) => {
+      if (!dropdown.contains(e.target) && e.target !== btn) {
+        this.closeAllFilterDropdowns();
+      }
+    };
+    
+    setTimeout(() => {
+      document.addEventListener('click', this._currentFilterCloseHandler);
+    }, 0);
+  },
+  
+  // 关闭所有筛选下拉面板
+  closeAllFilterDropdowns() {
+    if (this._currentFilterCloseHandler) {
+      document.removeEventListener('click', this._currentFilterCloseHandler);
+      this._currentFilterCloseHandler = null;
+    }
+    document.querySelectorAll('.filter-dropdown').forEach(el => el.remove());
+    if (this.elements.filterTagsBtn) this.elements.filterTagsBtn.classList.remove('active');
+    if (this.elements.filterTimeBtn) this.elements.filterTimeBtn.classList.remove('active');
+    if (this.elements.filterSourceBtn) this.elements.filterSourceBtn.classList.remove('active');
+  },
+  
+  // 创建标签下拉面板
+  createTagsDropdown() {
+    const dropdown = document.createElement('div');
+    const allTags = this.getAllTags();
+    const selectedTags = this.data.filters.tags;
+    
+    let optionsHtml = '';
+    allTags.forEach(tag => {
+      const checked = selectedTags.includes(tag) ? 'checked' : '';
+      optionsHtml += `
+        <div class="filter-option">
+          <input type="checkbox" id="tag-${tag}" value="${tag}" ${checked}>
+          <label for="tag-${tag}">${tag}</label>
+        </div>
+      `;
+    });
+    
+    if (allTags.length === 0) {
+      optionsHtml = `<div class="filter-option" style="color: var(--secondary-text); padding: 12px 16px;">${this.i18n('noTags')}</div>`;
+    }
+    
+    dropdown.innerHTML = `
+      <div class="filter-dropdown-header">${this.i18n('selectTags')}</div>
+      <div class="filter-dropdown-content">${optionsHtml}</div>
+      <div class="filter-dropdown-footer">
+        <button class="btn-cancel">${this.i18n('btnCancel')}</button>
+        <button class="btn-confirm">${this.i18n('confirm')}</button>
+      </div>
+    `;
+    
+    dropdown.querySelector('.btn-cancel').addEventListener('click', () => {
+      this.closeAllFilterDropdowns();
+    });
+    
+    dropdown.querySelector('.btn-confirm').addEventListener('click', () => {
+      const checked = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+      this.data.filters.tags = Array.from(checked).map(cb => cb.value);
+      this.closeAllFilterDropdowns();
+      this.applyFilters();
+    });
+    
+    return dropdown;
+  },
+  
+  // 创建时间下拉面板
+  createTimeDropdown() {
+    const dropdown = document.createElement('div');
+    
+    dropdown.innerHTML = `
+      <div class="filter-dropdown-header">${this.i18n('selectTimeRange')}</div>
+      <div class="time-shortcuts">
+        <label><input type="radio" name="time-shortcut" value="today"> ${this.i18n('today')}</label>
+        <label><input type="radio" name="time-shortcut" value="yesterday"> ${this.i18n('yesterday')}</label>
+        <label><input type="radio" name="time-shortcut" value="week"> ${this.i18n('thisWeek')}</label>
+        <label><input type="radio" name="time-shortcut" value="month"> ${this.i18n('thisMonth')}</label>
+        <label><input type="radio" name="time-shortcut" value="last7"> ${this.i18n('last7Days')}</label>
+        <label><input type="radio" name="time-shortcut" value="last30"> ${this.i18n('last30Days')}</label>
+        <label><input type="radio" name="time-shortcut" value="custom"> ${this.i18n('custom')}</label>
+      </div>
+      <div class="time-custom hidden">
+        <label>${this.i18n('startDate')}</label>
+        <input type="date" id="time-start">
+        <label>${this.i18n('endDate')}</label>
+        <input type="date" id="time-end">
+      </div>
+      <div class="filter-dropdown-footer">
+        <button class="btn-cancel">${this.i18n('btnCancel')}</button>
+        <button class="btn-confirm">${this.i18n('confirm')}</button>
+      </div>
+    `;
+    
+    const customSection = dropdown.querySelector('.time-custom');
+    const radios = dropdown.querySelectorAll('input[name="time-shortcut"]');
+    
+    if (this.data.filters.timeRange) {
+      const currentType = this.data.filters.timeRange.type;
+      const radioToCheck = dropdown.querySelector(`input[value="${currentType}"]`);
+      if (radioToCheck) {
+        radioToCheck.checked = true;
+        if (currentType === 'custom') {
+          customSection.classList.remove('hidden');
+          const startDate = this.data.filters.timeRange.start;
+          const endDate = this.data.filters.timeRange.end;
+          if (startDate) {
+            dropdown.querySelector('#time-start').value = startDate.toISOString().split('T')[0];
+          }
+          if (endDate) {
+            dropdown.querySelector('#time-end').value = endDate.toISOString().split('T')[0];
+          }
+        }
+      }
+    }
+    
+    radios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (radio.value === 'custom') {
+          customSection.classList.remove('hidden');
+        } else {
+          customSection.classList.add('hidden');
+        }
+      });
+    });
+    
+    dropdown.querySelector('.btn-cancel').addEventListener('click', () => {
+      this.closeAllFilterDropdowns();
+    });
+    
+    dropdown.querySelector('.btn-confirm').addEventListener('click', () => {
+      const selected = dropdown.querySelector('input[name="time-shortcut"]:checked');
+      if (!selected) {
+        this.data.filters.timeRange = null;
+      } else if (selected.value === 'custom') {
+        const start = dropdown.querySelector('#time-start').value;
+        const end = dropdown.querySelector('#time-end').value;
+        if (start && end) {
+          this.data.filters.timeRange = {
+            type: 'custom',
+            start: new Date(start),
+            end: new Date(end + 'T23:59:59')
+          };
+        }
+      } else {
+        this.data.filters.timeRange = this.getTimeRange(selected.value);
+      }
+      this.closeAllFilterDropdowns();
+      this.applyFilters();
+    });
+    
+    return dropdown;
+  },
+  
+  // 创建来源下拉面板
+  createSourceDropdown() {
+    const dropdown = document.createElement('div');
+    const allSources = this.getAllSources();
+    const selectedSources = this.data.filters.sources;
+    
+    let optionsHtml = '';
+    allSources.forEach(source => {
+      const checked = selectedSources.includes(source) ? 'checked' : '';
+      const safeId = source.replace(/\./g, '-');
+      optionsHtml += `
+        <div class="filter-option">
+          <input type="checkbox" id="source-${safeId}" value="${source}" ${checked}>
+          <label for="source-${safeId}">${source}</label>
+        </div>
+      `;
+    });
+    
+    if (allSources.length === 0) {
+      optionsHtml = `<div class="filter-option" style="color: var(--secondary-text); padding: 12px 16px;">${this.i18n('noSources')}</div>`;
+    }
+    
+    dropdown.innerHTML = `
+      <div class="filter-dropdown-header">${this.i18n('selectSource')}</div>
+      <div class="filter-dropdown-content">${optionsHtml}</div>
+      <div class="filter-dropdown-footer">
+        <button class="btn-cancel">${this.i18n('btnCancel')}</button>
+        <button class="btn-confirm">${this.i18n('confirm')}</button>
+      </div>
+    `;
+    
+    dropdown.querySelector('.btn-cancel').addEventListener('click', () => {
+      this.closeAllFilterDropdowns();
+    });
+    
+    dropdown.querySelector('.btn-confirm').addEventListener('click', () => {
+      const checked = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+      this.data.filters.sources = Array.from(checked).map(cb => cb.value);
+      this.closeAllFilterDropdowns();
+      this.applyFilters();
+    });
+    
+    return dropdown;
+  },
+  
+  // 获取所有标签
+  getAllTags() {
+    const tags = new Set();
+    this.data.notes.forEach(note => {
+      if (note.tags) {
+        note.tags.forEach(tag => tags.add(tag));
       }
     });
+    return Array.from(tags).sort();
+  },
+  
+  // 获取所有来源
+  getAllSources() {
+    const sources = new Set();
+    this.data.notes.forEach(note => {
+      try {
+        const hostname = new URL(note.url).hostname.replace('www.', '');
+        sources.add(hostname);
+      } catch (e) {}
+    });
+    return Array.from(sources).sort();
+  },
+  
+  // 获取时间范围
+  getTimeRange(shortcut) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (shortcut) {
+      case 'today':
+        return { type: 'today', start: today, end: now };
+      case 'yesterday':
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        return { type: 'yesterday', start: yesterday, end: new Date(today.getTime() - 1) };
+      case 'week':
+        const weekStart = new Date(today);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        return { type: 'week', start: weekStart, end: now };
+      case 'month':
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { type: 'month', start: monthStart, end: now };
+      case 'last7':
+        const last7 = new Date(today);
+        last7.setDate(last7.getDate() - 6);
+        return { type: 'last7', start: last7, end: now };
+      case 'last30':
+        const last30 = new Date(today);
+        last30.setDate(last30.getDate() - 29);
+        return { type: 'last30', start: last30, end: now };
+      default:
+        return null;
+    }
+  },
+  
+  // 应用筛选
+  applyFilters() {
+    let filtered = [...this.data.notes];
+    
+    // 标签筛选 (OR)
+    if (this.data.filters.tags.length > 0) {
+      filtered = filtered.filter(note => 
+        note.tags && note.tags.some(tag => this.data.filters.tags.includes(tag))
+      );
+    }
+    
+    // 时间筛选
+    if (this.data.filters.timeRange) {
+      const { start, end } = this.data.filters.timeRange;
+      filtered = filtered.filter(note => {
+        const created = new Date(note.createdAt);
+        return created >= start && created <= end;
+      });
+    }
+    
+    // 来源筛选 (OR)
+    if (this.data.filters.sources.length > 0) {
+      filtered = filtered.filter(note => {
+        try {
+          const hostname = new URL(note.url).hostname.replace('www.', '');
+          return this.data.filters.sources.includes(hostname);
+        } catch { return false; }
+      });
+    }
+    
+    // 结合搜索
+    if (this.data.searchQuery) {
+      const query = this.data.searchQuery.toLowerCase();
+      filtered = filtered.filter(note => 
+        note.content.toLowerCase().includes(query) ||
+        note.title.toLowerCase().includes(query) ||
+        (note.note && note.note.toLowerCase().includes(query))
+      );
+    }
+    
+    this.data.filteredNotes = filtered;
+    this.renderNotes(filtered);
+    this.updateActiveFilters();
+    this.updateFilterButtons();
+  },
+  
+  // 更新已选筛选条件显示
+  updateActiveFilters() {
+    const container = this.elements.activeFilters;
+    if (!container) return;
+    
+    const tags = [];
+    
+    // 标签
+    this.data.filters.tags.forEach(tag => {
+      tags.push({ type: 'tag', value: tag, label: tag });
+    });
+    
+    // 时间
+    if (this.data.filters.timeRange) {
+      const timeLabels = {
+        today: '今天',
+        yesterday: '昨天',
+        week: '本周',
+        month: '本月',
+        last7: '最近7天',
+        last30: '最近30天',
+        custom: '自定义时间'
+      };
+      const label = timeLabels[this.data.filters.timeRange.type] || '时间筛选';
+      tags.push({ type: 'time', value: 'time', label });
+    }
+    
+    // 来源
+    this.data.filters.sources.forEach(source => {
+      tags.push({ type: 'source', value: source, label: source });
+    });
+    
+    if (tags.length === 0) {
+      container.classList.add('hidden');
+      this.elements.clearFiltersBtn.classList.add('hidden');
+      return;
+    }
+    
+    container.classList.remove('hidden');
+    this.elements.clearFiltersBtn.classList.remove('hidden');
+    
+    container.innerHTML = tags.map(tag => `
+      <span class="filter-tag" data-type="${tag.type}" data-value="${tag.value}">
+        ${tag.label}
+        <span class="remove-filter">×</span>
+      </span>
+    `).join('');
+    
+    // 添加移除事件
+    container.querySelectorAll('.remove-filter').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tagEl = e.target.closest('.filter-tag');
+        const type = tagEl.dataset.type;
+        const value = tagEl.dataset.value;
+        this.removeFilter(type, value);
+      });
+    });
+  },
+  
+  // 移除单个筛选条件
+  removeFilter(type, value) {
+    if (type === 'tag') {
+      this.data.filters.tags = this.data.filters.tags.filter(t => t !== value);
+    } else if (type === 'time') {
+      this.data.filters.timeRange = null;
+    } else if (type === 'source') {
+      this.data.filters.sources = this.data.filters.sources.filter(s => s !== value);
+    }
+    this.applyFilters();
+  },
+  
+  // 清除所有筛选
+  clearAllFilters() {
+    this.data.filters.tags = [];
+    this.data.filters.timeRange = null;
+    this.data.filters.sources = [];
+    this.applyFilters();
+  },
+  
+  // 更新筛选按钮状态
+  updateFilterButtons() {
+    if (this.elements.filterTagsBtn) {
+      this.elements.filterTagsBtn.classList.toggle('active', this.data.filters.tags.length > 0);
+    }
+    if (this.elements.filterTimeBtn) {
+      this.elements.filterTimeBtn.classList.toggle('active', !!this.data.filters.timeRange);
+    }
+    if (this.elements.filterSourceBtn) {
+      this.elements.filterSourceBtn.classList.toggle('active', this.data.filters.sources.length > 0);
+    }
+  },
+  
+  // 检查是否有活跃的筛选条件
+  hasActiveFilters() {
+    return this.data.filters.tags.length > 0 
+        || this.data.filters.timeRange !== null 
+        || this.data.filters.sources.length > 0;
   }
 };
 
