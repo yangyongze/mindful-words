@@ -133,7 +133,7 @@ const PopupManager = {
     
     // ESC键关闭模态框
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.elements.editModal.style.display === 'block') {
+      if (e.key === 'Escape' && this.elements.editModal.style.display === 'flex') {
         this.closeEditModal();
       }
     });
@@ -731,7 +731,7 @@ const PopupManager = {
     this.elements.editContent.value = note.content;
     this.elements.editNote.value = note.note || '';
     this.elements.editTags.value = note.tags ? note.tags.join(', ') : '';
-    this.elements.editModal.style.display = 'block';
+    this.elements.editModal.style.display = 'flex';
     
     // 聚焦到内容输入框
     setTimeout(() => {
