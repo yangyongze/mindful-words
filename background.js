@@ -214,6 +214,7 @@ async function saveNote(request) {
     const newNote = {
       id: Date.now(),
       content: request.content,
+      note: '',
       title: request.title || request.content.substring(0, 30) + '...',
       url: request.url,
       createdAt: new Date().toISOString(),
