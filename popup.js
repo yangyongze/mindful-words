@@ -367,6 +367,17 @@ const PopupManager = {
     exportMenu.innerHTML = `
       <div class="export-menu-header">导出选项</div>
       <div class="export-options">
+        <div class="export-option export-option-ai" data-format="ai">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 16v-4"></path>
+            <path d="M12 8h.01"></path>
+          </svg>
+          <div class="option-content">
+            <span class="option-label">AI 练习模式</span>
+            <span class="option-desc">适合粘贴到豆包、千问等 AI 应用</span>
+          </div>
+        </div>
         <div class="export-option" data-format="json">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -507,7 +518,10 @@ const PopupManager = {
       option.addEventListener('click', (e) => {
         const format = e.currentTarget.dataset.format;
         
-        if (format === 'json') {
+        if (format === 'ai') {
+          const aiText = this.generateAIExport(this.data.notes);
+          this.copyToClipboard(aiText);
+        } else if (format === 'json') {
           this.exportNotesAsJSON(this.data.notes);
         } else if (format === 'csv') {
           this.exportNotesAsCSV(this.data.notes);
@@ -597,6 +611,57 @@ const PopupManager = {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 100);
+  },
+  
+  // 生成AI练习模式导出文本
+  generateAIExport(notes) {
+    const header = `我想练习以下英语内容，请你作为我的口语练习伙伴：\n\n【学习内容】`;
+    
+    const items = notes.map((note, index) => {
+      let item = `${index + 1}. ${note.content}`;
+      if (note.title) {
+        item += `\n   来源：${note.title}`;
+      }
+      if (note.note && note.note.trim()) {
+        item += `\n   笔记：${note.note}`;
+      }
+      return item;
+    }).join('\n\n');
+    
+    const footer = `
+
+请这样帮我学习：
+1. 先简单解释每个词/句子的意思和用法
+2. 在我们的对话中自然地使用这些词，引导我多说
+3. 适时测试我是否掌握，比如让我造句或回答问题
+4. 纠正我的错误，鼓励我继续练习`;
+
+    return header + '\n' + items + footer;
+  },
+  
+  // 复制到剪贴板
+  async copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      this.showCopySuccess();
+      return true;
+    } catch (err) {
+      console.error('复制失败:', err);
+      return false;
+    }
+  },
+  
+  // 显示复制成功提示
+  showCopySuccess() {
+    const toast = document.createElement('div');
+    toast.className = 'copy-toast';
+    toast.textContent = '已复制到剪贴板';
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.remove(), 300);
+    }, 2000);
   },
   
   // 保存滚动位置

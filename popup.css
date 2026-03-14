@@ -760,3 +760,61 @@ body {
   font-style: italic;
   line-height: 1.4;
 }
+
+.copy-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--accent-color);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: toastSlideIn 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.copy-toast.fade-out {
+  animation: toastFadeOut 0.3s ease forwards;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+}
+
+.export-option-ai {
+  background-color: rgba(175, 82, 222, 0.05);
+}
+
+.export-option-ai svg {
+  color: #af52de;
+}
+
+[data-theme="dark"] .export-option-ai {
+  background-color: rgba(191, 90, 242, 0.1);
+}
+
+[data-theme="dark"] .export-option-ai svg {
+  color: #bf5af2;
+}
