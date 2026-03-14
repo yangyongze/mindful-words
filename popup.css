@@ -1,5 +1,73 @@
-/* 引入共享CSS变量 */
-@import url('src/styles/variables.css');
+/* CSS 变量定义 */
+:root {
+  --primary-color: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #818cf8;
+  
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #6e6e73;
+  --text-meta: #98989d;
+  
+  --background-primary: #ffffff;
+  --background-secondary: #f5f5f7;
+  --background-card: #f9fafb;
+  
+  --border-color: rgba(0, 0, 0, 0.1);
+  
+  --success-color: #34c759;
+  --error-color: #ff3b30;
+  
+  --hover-bg-color: rgba(0, 0, 0, 0.04);
+  
+  --accent-color: #0066cc;
+  
+  --font-family-base: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 12px;
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  --transition-speed-fast: 150ms;
+  
+  --bg-color: var(--background-primary);
+  --card-bg-color: var(--background-card);
+  --text-color: var(--text-primary);
+  --secondary-text: var(--text-secondary);
+  --meta-text-color: var(--text-meta);
+  --font-sans: var(--font-family-base);
+  --anim-speed: var(--transition-speed-fast);
+}
+
+[data-theme="dark"] {
+  --text-primary: #f5f5f7;
+  --text-secondary: #98989d;
+  --text-tertiary: #98989d;
+  --text-meta: #86868b;
+  
+  --background-primary: #1c1c1e;
+  --background-secondary: #2c2c2e;
+  --background-card: #111827;
+  
+  --border-color: rgba(255, 255, 255, 0.15);
+  --hover-bg-color: rgba(255, 255, 255, 0.1);
+  
+  --bg-color: var(--background-primary);
+  --card-bg-color: var(--background-card);
+  --text-color: var(--text-primary);
+  --secondary-text: var(--text-secondary);
+  --meta-text-color: var(--text-meta);
+}
 
 * {
   margin: 0;
@@ -18,7 +86,6 @@ body {
   flex-direction: column;
 }
 
-/* 标题栏样式 */
 .header {
   display: flex;
   flex-direction: column;
@@ -107,7 +174,6 @@ body {
   background-color: var(--hover-bg-color);
 }
 
-/* 笔记列表容器 */
 .notes-container {
   flex: 1;
   overflow-y: auto;
@@ -121,7 +187,6 @@ body {
   gap: 12px;
 }
 
-/* 笔记卡片样式 */
 .note-item {
   padding: var(--spacing-md);
   margin-bottom: var(--spacing-sm);
@@ -203,7 +268,6 @@ body {
   color: var(--accent-color);
 }
 
-/* fade-edge 样式 */
 .fade-edge {
   height: 8px;
   pointer-events: none;
@@ -221,7 +285,6 @@ body {
   background: linear-gradient(to top, var(--bg-color), transparent);
 }
 
-/* hint-text 样式 */
 .hint-text {
   text-align: center;
   padding: 40px 20px;
@@ -233,7 +296,6 @@ body {
   font-size: 14px;
 }
 
-/* 模态框样式 */
 .modal {
   display: none;
   position: fixed;
@@ -368,7 +430,6 @@ body {
   background-color: var(--hover-bg-color);
 }
 
-/* 导出菜单样式 */
 .export-menu-backdrop {
   position: fixed;
   top: 0;
@@ -459,7 +520,6 @@ body {
   color: #0a84ff;
 }
 
-/* 复制成功提示 */
 .copy-toast {
   position: fixed;
   bottom: 20px;
@@ -502,7 +562,6 @@ body {
   }
 }
 
-/* 滚动条美化 */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -520,7 +579,6 @@ body {
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* 深色主题 */
 [data-theme="dark"] ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
 }
