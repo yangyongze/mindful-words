@@ -9,6 +9,7 @@ const PopupManager = {
     clearSearchBtn: null,
     editModal: null,
     editContent: null,
+    editNote: null,
     editTags: null,
     closeModal: null,
     cancelEdit: null,
@@ -46,6 +47,7 @@ const PopupManager = {
     this.elements.clearSearchBtn = document.getElementById('clear-search');
     this.elements.editModal = document.getElementById('edit-modal');
     this.elements.editContent = document.getElementById('edit-content');
+    this.elements.editNote = document.getElementById('edit-note');
     this.elements.editTags = document.getElementById('edit-tags');
     this.elements.closeModal = document.getElementById('close-modal');
     this.elements.cancelEdit = document.getElementById('cancel-edit');
@@ -660,6 +662,7 @@ const PopupManager = {
     
     this.data.currentEditingNote = note;
     this.elements.editContent.value = note.content;
+    this.elements.editNote.value = note.note || '';
     this.elements.editTags.value = note.tags ? note.tags.join(', ') : '';
     this.elements.editModal.style.display = 'block';
     
@@ -674,6 +677,7 @@ const PopupManager = {
     this.elements.editModal.style.display = 'none';
     this.data.currentEditingNote = null;
     this.elements.editContent.value = '';
+    this.elements.editNote.value = '';
     this.elements.editTags.value = '';
   },
   
@@ -690,6 +694,7 @@ const PopupManager = {
       return;
     }
     
+    const noteText = this.elements.editNote.value.trim();
     const tagsInput = this.elements.editTags.value.trim();
     const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
     
@@ -697,6 +702,7 @@ const PopupManager = {
     const updatedNote = {
       ...this.data.currentEditingNote,
       content: content,
+      note: noteText,
       tags: tags,
       updatedAt: new Date().toISOString()
     };
