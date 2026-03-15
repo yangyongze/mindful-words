@@ -287,6 +287,14 @@
     "message": "成功发送 {count} 条笔记到 Anki",
     "description": "Send success message"
   },
+  "sendSuccessWithSkipped": {
+    "message": "发送 {success} 条笔记到 Anki，跳过 {skipped} 条重复笔记",
+    "description": "Send success with skipped duplicates message"
+  },
+  "allDuplicatesError": {
+    "message": "所有笔记都是重复的，已存在于 Anki 中",
+    "description": "All notes are duplicates error"
+  },
   "sendPartialSuccess": {
     "message": "发送成功 {success} 条，失败 {failed} 条",
     "description": "Partial success message"

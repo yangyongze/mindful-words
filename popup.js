@@ -1493,32 +1493,75 @@ const PopupManager = {
     }));
     
     try {
-      const response = await fetch('http://127.0.0.1:8765', {
+      // First check which notes can be added (filter duplicates)
+      const canAddResponse = await fetch('http://127.0.0.1:8765', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'addNotes',
+          action: 'canAddNotes',
           version: 5,
           params: { notes: notesToAdd }
         })
       });
       
-      const data = await response.json();
+      const canAddData = await canAddResponse.json();
       
-      if (data.error) {
-        const errorMsg = Array.isArray(data.error) ? data.error.join(', ') : data.error;
-        console.error('[Mindful Words] AnkiConnect error:', errorMsg);
-        this.showToast(this.i18n('ankiConnectError') + ': ' + errorMsg, 'error');
+      if (canAddData.error) {
+        this.showToast(this.i18n('ankiConnectError'), 'error');
         return;
       }
       
-      const successCount = data.result.filter(r => r !== null).length;
-      const failedCount = data.result.length - successCount;
+      const canAddResults = canAddData.result || canAddData;
       
-      if (failedCount === 0) {
-        this.showToast(this.i18n('sendSuccess').replace('{count}', successCount));
+      const filteredNotes = notesToAdd.filter((_, index) => canAddResults[index] === true);
+      const duplicateCount = notesToAdd.length - filteredNotes.length;
+      
+      if (filteredNotes.length === 0) {
+        this.showToast(this.i18n('allDuplicatesError'), 'error');
+        return;
+      }
+      
+      // Send notes one by one to handle partial failures
+      let successCount = 0;
+      let failedCount = 0;
+      
+      for (const note of filteredNotes) {
+        try {
+          const response = await fetch('http://127.0.0.1:8765', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'addNote',
+              version: 5,
+              params: { note: note }
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (data.result && data.result !== null) {
+            successCount++;
+          } else {
+            failedCount++;
+          }
+        } catch (e) {
+          failedCount++;
+        }
+      }
+      
+      const totalSkipped = duplicateCount + failedCount;
+      
+      if (successCount === 0) {
+        this.showToast(this.i18n('allDuplicatesError'), 'error');
+        return;
+      }
+      
+      if (totalSkipped > 0) {
+        this.showToast(this.i18n('sendSuccessWithSkipped')
+          .replace('{success}', successCount)
+          .replace('{skipped}', totalSkipped));
       } else {
-        this.showToast(this.i18n('sendPartialSuccess').replace('{success}', successCount).replace('{failed}', failedCount));
+        this.showToast(this.i18n('sendSuccess').replace('{count}', successCount));
       }
     } catch (error) {
       console.error('[Mindful Words] Send notes to Anki failed:', error);

@@ -287,6 +287,14 @@
     "message": "Successfully sent {count} notes to Anki",
     "description": "Send success message"
   },
+  "sendSuccessWithSkipped": {
+    "message": "Sent {success} notes to Anki, skipped {skipped} duplicates",
+    "description": "Send success with skipped duplicates message"
+  },
+  "allDuplicatesError": {
+    "message": "All notes are duplicates and already exist in Anki",
+    "description": "All notes are duplicates error"
+  },
   "sendPartialSuccess": {
     "message": "Sent {success} notes, {failed} failed",
     "description": "Partial success message"
