@@ -247,17 +247,49 @@
     "message": "纯文本，适用于任何环境",
     "description": "TXT export option description"
   },
-  "exportAnki": {
-    "message": "Anki (.apkg)",
-    "description": "Anki export option"
+  "sendToAnki": {
+    "message": "发送到 Anki",
+    "description": "Send to Anki option"
   },
-  "exportAnkiDesc": {
-    "message": "导入 Anki 进行间隔重复学习",
-    "description": "Anki export option description"
+  "sendToAnkiDesc": {
+    "message": "通过 AnkiConnect 发送选中的笔记到 Anki",
+    "description": "Send to Anki option description"
   },
-  "exportAnkiFailed": {
-    "message": "导出 Anki 文件失败，请重试",
-    "description": "Anki export failed toast"
+  "selectDeck": {
+    "message": "选择牌组",
+    "description": "Deck selection label"
+  },
+  "selectModel": {
+    "message": "选择模板",
+    "description": "Model selection label"
+  },
+  "loading": {
+    "message": "加载中...",
+    "description": "Loading text"
+  },
+  "noModelsFound": {
+    "message": "未找到模板",
+    "description": "No models found message"
+  },
+  "willSendNotes": {
+    "message": "将发送 {count} 条笔记",
+    "description": "Notes count to send"
+  },
+  "ankiConnectNotRunning": {
+    "message": "AnkiConnect 未运行。请确保 Anki 已运行并安装了 AnkiConnect 插件。",
+    "description": "AnkiConnect not running error"
+  },
+  "ankiConnectError": {
+    "message": "连接 AnkiConnect 失败",
+    "description": "AnkiConnect connection error"
+  },
+  "sendSuccess": {
+    "message": "成功发送 {count} 条笔记到 Anki",
+    "description": "Send success message"
+  },
+  "sendPartialSuccess": {
+    "message": "发送成功 {success} 条，失败 {failed} 条",
+    "description": "Partial success message"
   },
   "noteNumber": {
     "message": "笔记 $NUMBER$",

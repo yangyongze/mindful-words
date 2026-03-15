@@ -641,26 +641,15 @@ const PopupManager = {
     exportMenu.innerHTML = `
       <div class="export-menu-header">${this.i18n('exportOptions')}</div>
       <div class="export-options">
-        <div class="export-option export-option-ai" data-format="ai">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 16v-4"></path>
-            <path d="M12 8h.01"></path>
-          </svg>
-          <div class="option-content">
-            <span class="option-label">${this.i18n('exportAI')}</span>
-            <span class="option-desc">${this.i18n('exportAIDesc')}</span>
-          </div>
-        </div>
-        <div class="export-option" data-format="apkg">
+        <div class="export-option" data-format="ankiconnect">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
           <div class="option-content">
-            <span class="option-label">${this.i18n('exportAnki')}</span>
-            <span class="option-desc">${this.i18n('exportAnkiDesc')}</span>
+            <span class="option-label">${this.i18n('sendToAnki')}</span>
+            <span class="option-desc">${this.i18n('sendToAnkiDesc')}</span>
           </div>
         </div>
         <div class="export-option" data-format="json">
@@ -715,11 +704,8 @@ const PopupManager = {
       option.addEventListener('click', async (e) => {
         const format = e.currentTarget.dataset.format;
         
-        if (format === 'ai') {
-          const aiText = this.generateAIExport(this.data.notes);
-          this.copyToClipboard(aiText);
-        } else if (format === 'apkg') {
-          await this.exportNotesAsApkg(this.data.notes);
+        if (format === 'ankiconnect') {
+          await this.sendToAnkiConnect(this.data.notes);
         } else if (format === 'json') {
           this.exportNotesAsJSON(this.data.notes);
         } else if (format === 'csv') {
@@ -792,83 +778,188 @@ const PopupManager = {
     this.downloadFile(blob, 'mindful_notes.txt');
   },
   
-  // Export notes as Anki .apkg file
-  async exportNotesAsApkg(notes) {
+  // AnkiConnect integration
+  async checkAnkiConnect() {
     try {
-      const success = await ApkgGenerator.init();
-      if (!success) {
-        this.showToast(this.i18n('exportAnkiFailed'), 'error');
-        return;
-      }
-      
-      const blob = await ApkgGenerator.generateApkg(notes);
-      ApkgGenerator.downloadApkg(blob, 'mindful_words.apkg');
-      
-      this.showToast(this.i18n('dataExported'));
+      const response = await fetch('http://127.0.0.1:8765', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'version', version: 5 })
+      });
+      const data = await response.json();
+      return data && !data.error;
     } catch (error) {
-      console.error('[Mindful Words] Anki export failed:', error);
-      this.showToast(this.i18n('exportAnkiFailed'), 'error');
-    }
-  },
-  
-  // 下载文件
-  downloadFile(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    
-    // 清理
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
-  },
-  
-  // 生成AI练习模式导出文本
-  generateAIExport(notes) {
-    const header = `我想练习以下英语内容，请你作为我的口语练习伙伴：\n\n【学习内容】`;
-    
-    const items = notes.map((note, index) => {
-      let item = `${index + 1}. ${note.content}`;
-      if (note.title) {
-        item += `\n   来源：${note.title}`;
-      }
-      if (note.note && note.note.trim()) {
-        item += `\n   ${this.i18n('personalNote')}：${note.note}`;
-      }
-      return item;
-    }).join('\n\n');
-    
-    const footer = `
-
-请这样帮我学习：
-1. 先简单解释每个词/句子的意思和用法
-2. 在我们的对话中自然地使用这些词，引导我多说
-3. 适时测试我是否掌握，比如让我造句或回答问题
-4. 纠正我的错误，鼓励我继续练习`;
-
-    return header + '\n' + items + footer;
-  },
-  
-  // 复制到剪贴板
-  async copyToClipboard(text) {
-    try {
-      await navigator.clipboard.writeText(text);
-      this.showToast(this.i18n('copiedToClipboard'));
-      return true;
-    } catch (err) {
-      console.error('Copy failed:', err);
-      this.showToast(this.i18n('copyFailed'), 'error');
+      console.error('[Mindful Words] AnkiConnect check failed:', error);
       return false;
     }
   },
   
-  // 显示复制成功提示
-  showCopySuccess() {
-    this.showToast('已复制到剪贴板');
+  async getAnkiDecks() {
+    try {
+      const response = await fetch('http://127.0.0.1:8765', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deckNames', version: 5 })
+      });
+      const data = await response.json();
+      return data.result || [];
+    } catch (error) {
+      console.error('[Mindful Words] Get Anki decks failed:', error);
+      return [];
+    }
+  },
+  
+  async getAnkiModels() {
+    try {
+      const response = await fetch('http://127.0.0.1:8765', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'modelNames', version: 5 })
+      });
+      const data = await response.json();
+      return data.result || [];
+    } catch (error) {
+      console.error('[Mindful Words] Get Anki models failed:', error);
+      return [];
+    }
+  },
+  
+  async getAnkiModelFields(modelName) {
+    try {
+      const response = await fetch('http://127.0.0.1:8765', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'modelFieldNames', version: 5, params: { modelName } })
+      });
+      const data = await response.json();
+      return data.result || [];
+    } catch (error) {
+      console.error('[Mindful Words] Get Anki model fields failed:', error);
+      return [];
+    }
+  },
+  
+  async sendToAnkiConnect(notes) {
+    try {
+      const connected = await this.checkAnkiConnect();
+      if (!connected) {
+        this.showToast(this.i18n('ankiConnectNotRunning'), 'error');
+        return;
+      }
+      
+      const decks = await this.getAnkiDecks();
+      if (!decks || decks.length === 0) {
+        this.showToast(this.i18n('ankiConnectError'), 'error');
+        return;
+      }
+      
+      this.showDeckSelectionDialog(notes, decks);
+    } catch (error) {
+      console.error('[Mindful Words] Send to Anki failed:', error);
+      this.showToast(this.i18n('ankiConnectError'), 'error');
+    }
+  },
+  
+  showDeckSelectionDialog(notes, decks) {
+    const existingDialog = document.querySelector('.deck-selection-dialog');
+    if (existingDialog) {
+      existingDialog.remove();
+    }
+    
+    const existingBackdrop = document.querySelector('.deck-selection-backdrop');
+    if (existingBackdrop) {
+      existingBackdrop.remove();
+    }
+    
+    const backdrop = document.createElement('div');
+    backdrop.className = 'deck-selection-backdrop';
+    document.body.appendChild(backdrop);
+    
+    const dialog = document.createElement('div');
+    dialog.className = 'deck-selection-dialog';
+    dialog.innerHTML = `
+      <div class="deck-selection-header">${this.i18n('sendToAnki')}</div>
+      <div class="deck-selection-body">
+        <div class="deck-selection-label">${this.i18n('selectDeck')}</div>
+        <select class="deck-selection-dropdown" id="deck-select">
+          ${decks.map(deck => `<option value="${deck}">${deck}</option>`)}
+        </select>
+        <div class="deck-selection-label" style="margin-top: 12px;">${this.i18n('selectModel')}</div>
+        <select class="deck-selection-dropdown" id="model-select">
+          <option value="">${this.i18n('loading')}</option>
+        </select>
+        <div class="deck-selection-count">${this.i18n('willSendNotes').replace('{count}', notes.length)}</div>
+      </div>
+      <div class="deck-selection-footer">
+        <button class="deck-selection-cancel">${this.i18n('cancel')}</button>
+        <button class="deck-selection-send">${this.i18n('send')}</button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+    
+    // Load models
+    this.getAnkiModels().then(models => {
+      const modelSelect = dialog.querySelector('#model-select');
+      if (models && models.length > 0) {
+        const preferredModel = models.find(m => m === 'Basic') || models.find(m => m.toLowerCase().includes('basic')) || models[0];
+        modelSelect.innerHTML = models.map(m => 
+          `<option value="${m}" ${m === preferredModel ? 'selected' : ''}>${m}</option>`
+        ).join('');
+      } else {
+        modelSelect.innerHTML = `<option value="">${this.i18n('noModelsFound')}</option>`;
+        dialog.querySelector('.deck-selection-send').disabled = true;
+      }
+    }).catch(err => {
+      console.error('[Mindful Words] getAnkiModels error:', err);
+    });
+    
+    dialog.querySelector('.deck-selection-cancel').addEventListener('click', () => {
+      dialog.remove();
+      backdrop.remove();
+    });
+    
+    dialog.querySelector('.deck-selection-send').addEventListener('click', async () => {
+      const selectedDeck = dialog.querySelector('#deck-select').value;
+      const selectedModel = dialog.querySelector('#model-select').value;
+      
+      if (!selectedModel) {
+        this.showToast(this.i18n('noModelsFound'), 'error');
+        return;
+      }
+      
+      dialog.remove();
+      backdrop.remove();
+      await this.sendNotesToAnki(notes, selectedDeck, selectedModel);
+    });
+    
+    backdrop.addEventListener('click', () => {
+      dialog.remove();
+      backdrop.remove();
+    });
+  },
+  
+  formatBackContent(note) {
+    const parts = [];
+    
+    if (note.note && note.note.trim()) {
+      parts.push(`${this.i18n('personalNote')}: ${note.note}`);
+    }
+    
+    if (note.title || note.url) {
+      const source = note.title || this.i18n('webpage');
+      parts.push(`${this.i18n('source')}: ${source} - ${note.url}`);
+    }
+    
+    if (note.tags && note.tags.length > 0) {
+      parts.push(`${this.i18n('filterTags')}: ${note.tags.join(', ')}`);
+    }
+    
+    if (note.createdAt) {
+      const date = new Date(note.createdAt).toLocaleDateString();
+      parts.push(`${this.i18n('time')}: ${date}`);
+    }
+    
+    return parts.join('<br>');
   },
   
   // 保存滚动位置
@@ -1211,15 +1302,15 @@ const PopupManager = {
     exportMenu.innerHTML = `
       <div class="export-menu-header">${this.i18n('exportOptions')}</div>
       <div class="export-options">
-        <div class="export-option" data-format="apkg">
+        <div class="export-option" data-format="ankiconnect">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
           <div class="option-content">
-            <span class="option-label">${this.i18n('exportAnki')}</span>
-            <span class="option-desc">${this.i18n('exportAnkiDesc')}</span>
+            <span class="option-label">${this.i18n('sendToAnki')}</span>
+            <span class="option-desc">${this.i18n('sendToAnkiDesc')}</span>
           </div>
         </div>
         <div class="export-option" data-format="json">
@@ -1270,8 +1361,8 @@ const PopupManager = {
       option.addEventListener('click', async (e) => {
         const format = e.currentTarget.dataset.format;
         
-        if (format === 'apkg') {
-          await this.exportNotesAsApkg(notesToExport);
+        if (format === 'ankiconnect') {
+          await this.sendToAnkiConnect(notesToExport);
         } else if (format === 'json') {
           this.exportNotesAsJSON(notesToExport);
         } else if (format === 'csv') {
@@ -1361,6 +1452,102 @@ const PopupManager = {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 100);
+  },
+  
+  // AnkiConnect integration
+  async checkAnkiConnect() {
+    try {
+      const response = await fetch('http://127.0.0.1:8765', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'version', version: 5 })
+      });
+      const data = await response.json();
+      return data && !data.error;
+    } catch (error) {
+      console.error('[Mindful Words] AnkiConnect check failed:', error);
+      return false;
+    }
+  },
+  
+  async sendNotesToAnki(notes, deckName, modelName) {
+    const fields = await this.getAnkiModelFields(modelName);
+    
+    if (!fields || fields.length === 0) {
+      console.error('[Mindful Words] No fields found for model:', modelName);
+      this.showToast(this.i18n('ankiConnectError'), 'error');
+      return;
+    }
+    
+    const frontField = fields[0];
+    const backField = fields.length > 1 ? fields[1] : fields[0];
+    
+    const notesToAdd = notes.map(note => ({
+      deckName: deckName,
+      modelName: modelName,
+      fields: {
+        [frontField]: note.content,
+        [backField]: this.formatBackContent(note)
+      },
+      tags: ['mindful-words', ...(note.tags || [])]
+    }));
+    
+    try {
+      const response = await fetch('http://127.0.0.1:8765', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addNotes',
+          version: 5,
+          params: { notes: notesToAdd }
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        const errorMsg = Array.isArray(data.error) ? data.error.join(', ') : data.error;
+        console.error('[Mindful Words] AnkiConnect error:', errorMsg);
+        this.showToast(this.i18n('ankiConnectError') + ': ' + errorMsg, 'error');
+        return;
+      }
+      
+      const successCount = data.result.filter(r => r !== null).length;
+      const failedCount = data.result.length - successCount;
+      
+      if (failedCount === 0) {
+        this.showToast(this.i18n('sendSuccess').replace('{count}', successCount));
+      } else {
+        this.showToast(this.i18n('sendPartialSuccess').replace('{success}', successCount).replace('{failed}', failedCount));
+      }
+    } catch (error) {
+      console.error('[Mindful Words] Send notes to Anki failed:', error);
+      this.showToast(this.i18n('ankiConnectError'), 'error');
+    }
+  },
+  
+  formatBackContent(note) {
+    const parts = [];
+    
+    if (note.note && note.note.trim()) {
+      parts.push(`${this.i18n('personalNote')}: ${note.note}`);
+    }
+    
+    if (note.title || note.url) {
+      const source = note.title || this.i18n('webpage');
+      parts.push(`${this.i18n('source')}: ${source} - ${note.url}`);
+    }
+    
+    if (note.tags && note.tags.length > 0) {
+      parts.push(`${this.i18n('filterTags')}: ${note.tags.join(', ')}`);
+    }
+    
+    if (note.createdAt) {
+      const date = new Date(note.createdAt).toLocaleDateString();
+      parts.push(`${this.i18n('time')}: ${date}`);
+    }
+    
+    return parts.join('<br>');
   },
   
   // 显示筛选下拉面板

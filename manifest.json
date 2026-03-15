@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Mindful Words",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "default_locale": "en",
   "description": "A Chrome extension for saving and organizing web content",
   "permissions": ["activeTab", "storage", "contextMenus", "sidePanel"],
@@ -25,23 +25,5 @@
   "side_panel": {
     "default_path": "popup.html"
   },
-  "options_page": "options.html",
-  "sandbox": {
-    "pages": ["sandbox.html"]
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self';",
-    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self';"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "lib/sql-wasm.js",
-        "lib/sql-wasm.wasm",
-        "lib/jszip.min.js",
-        "sandbox.html"
-      ],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  "options_page": "options.html"
 }

@@ -247,17 +247,49 @@
     "message": "Plain text, works anywhere",
     "description": "TXT export option description"
   },
-  "exportAnki": {
-    "message": "Anki (.apkg)",
-    "description": "Anki export option"
+  "sendToAnki": {
+    "message": "Send to Anki",
+    "description": "Send to Anki option"
   },
-  "exportAnkiDesc": {
-    "message": "Import into Anki for spaced repetition learning",
-    "description": "Anki export option description"
+  "sendToAnkiDesc": {
+    "message": "Send selected notes to Anki via AnkiConnect",
+    "description": "Send to Anki option description"
   },
-  "exportAnkiFailed": {
-    "message": "Failed to export Anki file, please try again",
-    "description": "Anki export failed toast"
+  "selectDeck": {
+    "message": "Select Deck",
+    "description": "Deck selection label"
+  },
+  "selectModel": {
+    "message": "Select Model",
+    "description": "Model selection label"
+  },
+  "loading": {
+    "message": "Loading...",
+    "description": "Loading text"
+  },
+  "noModelsFound": {
+    "message": "No models found",
+    "description": "No models found message"
+  },
+  "willSendNotes": {
+    "message": "Will send {count} notes",
+    "description": "Notes count to send"
+  },
+  "ankiConnectNotRunning": {
+    "message": "AnkiConnect is not running. Please ensure Anki is running with AnkiConnect addon installed.",
+    "description": "AnkiConnect not running error"
+  },
+  "ankiConnectError": {
+    "message": "Failed to connect to AnkiConnect",
+    "description": "AnkiConnect connection error"
+  },
+  "sendSuccess": {
+    "message": "Successfully sent {count} notes to Anki",
+    "description": "Send success message"
+  },
+  "sendPartialSuccess": {
+    "message": "Sent {success} notes, {failed} failed",
+    "description": "Partial success message"
   },
   "noteNumber": {
     "message": "Note $NUMBER$",
