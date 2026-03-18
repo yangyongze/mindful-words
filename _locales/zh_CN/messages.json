@@ -57,6 +57,10 @@
     "message": "还没有保存任何笔记",
     "description": "Empty state title"
   },
+  "note": {
+    "message": "笔记",
+    "description": "Note label"
+  },
   "noNotesHint": {
     "message": "在网页上按住 Ctrl 并选择文本即可保存",
     "description": "Empty state hint"

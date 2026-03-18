@@ -471,13 +471,10 @@ const PopupManager = {
       let message = this.i18n('noNotes');
       let hint = this.i18n('noNotesHint');
       
-      if (this.data.searchQuery && this.hasActiveFilters()) {
+      if (this.data.searchQuery || this.hasActiveFilters()) {
         message = this.i18n('noMatchingNotes');
         hint = this.i18n('tryOtherKeywords');
-      } else if (this.data.searchQuery) {
-        message = this.i18n('noMatchingNotes');
-        hint = this.i18n('tryOtherKeywords');
-      } else if (this.hasActiveFilters()) {
+      } else {
         message = this.i18n('noFilteredNotes');
         hint = this.i18n('adjustFilters');
       }
@@ -504,11 +501,12 @@ const PopupManager = {
     let html = '';
     sortedNotes.forEach(note => {
       const formattedDate = this.formatDate(note.createdAt);
+      const escapedId = this.escapeHtml(note.id);
       
       let tagsHtml = '';
       if (note.tags && note.tags.length > 0) {
         tagsHtml = `<div class="note-tags">
-          ${note.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          ${note.tags.map(tag => `<span class="tag">${this.escapeHtml(tag)}</span>`).join('')}
         </div>`;
       }
       
@@ -518,9 +516,15 @@ const PopupManager = {
       }
       
       let displayUrl = '';
+      let safeUrl = '#';
       try {
-        const url = new URL(note.url);
-        displayUrl = url.hostname.replace('www.', '');
+        if (note.url) {
+          const url = new URL(note.url);
+          displayUrl = url.hostname.replace('www.', '');
+          safeUrl = this.escapeHtml(note.url);
+        } else {
+          displayUrl = this.i18n('webpage');
+        }
       } catch (e) {
         displayUrl = this.i18n('webpage');
       }
@@ -530,16 +534,16 @@ const PopupManager = {
       const selectedClass = isSelected ? 'selected' : '';
       
       html += `
-        <div class="note-item ${hasCheckboxClass} ${selectedClass}" data-id="${note.id}">
-          ${this.data.selectionMode ? `<input type="checkbox" class="note-checkbox" ${isSelected ? 'checked' : ''} data-id="${note.id}">` : ''}
+        <div class="note-item ${hasCheckboxClass} ${selectedClass}" data-id="${escapedId}">
+          ${this.data.selectionMode ? `<input type="checkbox" class="note-checkbox" ${isSelected ? 'checked' : ''} data-id="${escapedId}">` : ''}
           <div class="note-content">${this.formatContent(note.content)}</div>
           ${noteHtml}
           ${tagsHtml}
           <div class="note-meta">
             ${formattedDate} · 
-            <a href="${note.url}" target="_blank" class="note-url" title="${note.url}">${displayUrl}</a>
+            <a href="${safeUrl}" target="_blank" class="note-url" title="${safeUrl}">${this.escapeHtml(displayUrl)}</a>
             <span class="spacer"></span>
-            ${!this.data.selectionMode ? `<span class="action-btn delete-btn" data-id="${note.id}" title="${this.i18n('deleteNote')}">${this.i18n('btnDelete')}</span>` : ''}
+            ${!this.data.selectionMode ? `<span class="action-btn delete-btn" data-id="${escapedId}" title="${this.i18n('deleteNote')}">${this.i18n('btnDelete')}</span>` : ''}
           </div>
         </div>
       `;
@@ -559,12 +563,20 @@ const PopupManager = {
   
   // 格式化笔记内容
   formatContent(content) {
-    // 检测内容长度，超过一定长度将截断
     const MAX_LENGTH = 280;
-    if (content.length > MAX_LENGTH) {
-      return content.substring(0, MAX_LENGTH) + '...';
+    const escaped = this.escapeHtml(content || '');
+    if (escaped.length > MAX_LENGTH) {
+      return escaped.substring(0, MAX_LENGTH) + '...';
     }
-    return content;
+    return escaped;
+  },
+  
+  // HTML 转义函数 - 防止 XSS 攻击
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   },
   
   sendMessage(message) {
@@ -622,10 +634,10 @@ const PopupManager = {
     }, 100);
   },
   
-  // 显示导出选项
-  showExportOptions() {
+  // 显示导出所有笔记选项
+  showExportAllOptions() {
     if (!this.data.notes || this.data.notes.length === 0) {
-      alert(this.i18n('noNotes'));
+      this.showToast(this.i18n('noNotes'), 'error');
       return;
     }
     
@@ -1035,7 +1047,7 @@ const PopupManager = {
     
     const content = this.elements.editContent.value.trim();
     if (!content) {
-      alert(this.i18n('contentCannotBeEmpty'));
+      this.showToast(this.i18n('contentCannotBeEmpty'), 'error');
       return;
     }
     
@@ -1079,8 +1091,8 @@ const PopupManager = {
         this.showToast(this.i18n('updateFailed'), 'error');
       }
     } catch (error) {
-      console.error('更新笔记失败:', error);
-      alert(this.i18n('updateFailed'));
+      console.error('Update note failed:', error);
+      this.showToast(this.i18n('updateFailed'), 'error');
     }
   },
   
@@ -1424,7 +1436,7 @@ const PopupManager = {
     notes.forEach((note, index) => {
       const tags = note.tags && note.tags.length > 0 ? `[${note.tags.join(', ')}]` : '';
       
-      txtContent += `--- 笔记 ${index + 1} ---\n`;
+      txtContent += `--- ${this.i18n('note')} ${index + 1} ---\n`;
       txtContent += `${note.content}\n\n`;
       if (note.note && note.note.trim()) {
         txtContent += `${this.i18n('personalNote')}: ${note.note}\n\n`;

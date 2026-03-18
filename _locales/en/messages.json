@@ -57,6 +57,10 @@
     "message": "No notes yet",
     "description": "Empty state title"
   },
+  "note": {
+    "message": "Note",
+    "description": "Note label"
+  },
   "noNotesHint": {
     "message": "Select text on a webpage and press Ctrl + Left Click to save",
     "description": "Empty state hint"
