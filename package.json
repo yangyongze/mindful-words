@@ -20,9 +20,5 @@
     "url": "https://github.com/yangyongze/mindful-words/issues"
   },
   "homepage": "https://github.com/yangyongze/mindful-words#readme",
-  "description": "",
-  "dependencies": {
-    "jszip": "^3.10.1",
-    "sql.js": "^1.14.1"
-  }
+  "description": ""
 }
