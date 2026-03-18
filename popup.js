@@ -634,162 +634,6 @@ const PopupManager = {
     }, 100);
   },
   
-  // 显示导出所有笔记选项
-  showExportAllOptions() {
-    if (!this.data.notes || this.data.notes.length === 0) {
-      this.showToast(this.i18n('noNotes'), 'error');
-      return;
-    }
-    
-    // 移除可能已存在的导出菜单
-    const existingMenu = document.querySelector('.export-menu');
-    if (existingMenu) {
-      existingMenu.remove();
-    }
-    
-    // 创建导出菜单
-    const exportMenu = document.createElement('div');
-    exportMenu.className = 'export-menu';
-    exportMenu.innerHTML = `
-      <div class="export-menu-header">${this.i18n('exportOptions')}</div>
-      <div class="export-options">
-        <div class="export-option" data-format="ankiconnect">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <div class="option-content">
-            <span class="option-label">${this.i18n('sendToAnki')}</span>
-            <span class="option-desc">${this.i18n('sendToAnkiDesc')}</span>
-          </div>
-        </div>
-        <div class="export-option" data-format="json">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <path d="M12 18v-6"></path>
-            <path d="M8 18v-1"></path>
-            <path d="M16 18v-3"></path>
-          </svg>
-          <div class="option-content">
-            <span class="option-label">${this.i18n('exportJSON')}</span>
-            <span class="option-desc">${this.i18n('exportJSONDesc')}</span>
-          </div>
-        </div>
-        <div class="export-option" data-format="csv">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <line x1="10" y1="9" x2="8" y2="9"></line>
-          </svg>
-          <div class="option-content">
-            <span class="option-label">${this.i18n('exportCSV')}</span>
-            <span class="option-desc">${this.i18n('exportCSVDesc')}</span>
-          </div>
-        </div>
-        <div class="export-option" data-format="txt">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-          </svg>
-          <div class="option-content">
-            <span class="option-label">${this.i18n('exportTXT')}</span>
-            <span class="option-desc">${this.i18n('exportTXTDesc')}</span>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // 创建背景遮罩（用于捕获点击事件关闭菜单）
-    const backdrop = document.createElement('div');
-    backdrop.className = 'export-menu-backdrop';
-    document.body.appendChild(backdrop);
-    document.body.appendChild(exportMenu);
-    
-    // 处理导出选项点击
-    exportMenu.querySelectorAll('.export-option').forEach(option => {
-      option.addEventListener('click', async (e) => {
-        const format = e.currentTarget.dataset.format;
-        
-        if (format === 'ankiconnect') {
-          await this.sendToAnkiConnect(this.data.notes);
-        } else if (format === 'json') {
-          this.exportNotesAsJSON(this.data.notes);
-        } else if (format === 'csv') {
-          this.exportNotesAsCSV(this.data.notes);
-        } else if (format === 'txt') {
-          this.exportNotesAsTXT(this.data.notes);
-        }
-        
-        // 关闭菜单
-        exportMenu.remove();
-        backdrop.remove();
-      });
-    });
-    
-    // 点击背景关闭菜单
-    backdrop.addEventListener('click', () => {
-      exportMenu.remove();
-      backdrop.remove();
-    });
-  },
-  
-  // 导出笔记为JSON
-  exportNotesAsJSON(notes) {
-    const data = JSON.stringify(notes, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    this.downloadFile(blob, 'mindful_notes.json');
-  },
-  
-  exportNotesAsCSV(notes) {
-    const headers = [this.i18n('contentLabel').replace(':', ''), this.i18n('personalNoteLabel').replace(':', ''), 'Title', 'URL', this.i18n('filterTags'), this.i18n('time') + ' Created', this.i18n('time') + ' Updated'];
-    const csvRows = [];
-    
-    csvRows.push(headers.join(','));
-    
-    notes.forEach(note => {
-      const tags = note.tags ? note.tags.join(';') : '';
-      const noteText = note.note || '';
-      const row = [
-        `"${note.content.replace(/"/g, '""')}"`,
-        `"${noteText.replace(/"/g, '""')}"`,
-        `"${note.title.replace(/"/g, '""')}"`,
-        `"${note.url}"`,
-        `"${tags}"`,
-        `"${note.createdAt}"`,
-        `"${note.updatedAt}"`
-      ];
-      csvRows.push(row.join(','));
-    });
-    
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    this.downloadFile(blob, 'mindful_notes.csv');
-  },
-  
-  exportNotesAsTXT(notes) {
-    let txtContent = '';
-    
-    notes.forEach((note, index) => {
-      const tags = note.tags && note.tags.length > 0 ? `[${note.tags.join(', ')}]` : '';
-      
-      txtContent += `--- ${this.i18n('noteNumber', [(index + 1).toString()])} ---\n`;
-      txtContent += `${note.content}\n\n`;
-      txtContent += `${this.i18n('filterTags')}: ${tags}\n`;
-      txtContent += `${this.i18n('source')}: ${note.url}\n`;
-      txtContent += `${this.i18n('time')}: ${new Date(note.createdAt).toLocaleString()}\n`;
-      txtContent += `\n\n`;
-    });
-    
-    const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
-    this.downloadFile(blob, 'mindful_notes.txt');
-  },
-  
   // AnkiConnect integration
   async checkAnkiConnect() {
     try {
@@ -1210,7 +1054,18 @@ const PopupManager = {
     } else {
       this.data.selectedNoteIds.add(noteId);
     }
-    this.renderNotes();
+    
+    // 只更新特定笔记的 UI，而不是重新渲染整个列表
+    const noteItem = document.querySelector(`.note-item[data-id="${noteId}"]`);
+    const checkbox = document.querySelector(`.note-checkbox[data-id="${noteId}"]`);
+    
+    if (noteItem) {
+      noteItem.classList.toggle('selected', this.data.selectedNoteIds.has(noteId));
+    }
+    if (checkbox) {
+      checkbox.checked = this.data.selectedNoteIds.has(noteId);
+    }
+    
     this.updateSelectionUI();
   },
   

@@ -212,6 +212,25 @@ async function updateNote(noteId, noteData) {
 
 // 保存新笔记
 async function saveNote(request) {
+  // 输入验证
+  if (!request.content || typeof request.content !== 'string') {
+    throw new Error('Content is required and must be a string');
+  }
+  
+  const trimmedContent = request.content.trim();
+  if (trimmedContent.length === 0) {
+    throw new Error('Content cannot be empty');
+  }
+  
+  if (trimmedContent.length > 10000) {
+    throw new Error('Content exceeds maximum length of 10000 characters');
+  }
+  
+  // URL 验证
+  if (request.url && typeof request.url !== 'string') {
+    throw new Error('URL must be a string');
+  }
+  
   try {
     // 首先从存储中加载最新的笔记数据，确保不会丢失旧笔记
     const latestNotes = await storageAPI.loadData('notes') || [];
@@ -221,9 +240,9 @@ async function saveNote(request) {
     
     // 标签处理
     const processedTags = [];
-    if (request.tags && request.tags.length > 0) {
+    if (request.tags && Array.isArray(request.tags)) {
       request.tags.forEach(tag => {
-        const trimmedTag = tag.trim();
+        const trimmedTag = String(tag).trim();
         if (trimmedTag && !processedTags.includes(trimmedTag)) {
           processedTags.push(trimmedTag);
         }
@@ -233,10 +252,10 @@ async function saveNote(request) {
     // 笔记对象创建
     const newNote = {
       id: Date.now(),
-      content: request.content,
+      content: trimmedContent,
       note: '',
-      title: request.title || request.content.substring(0, 30) + '...',
-      url: request.url,
+      title: request.title || trimmedContent.substring(0, 30) + '...',
+      url: request.url || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       tags: processedTags
@@ -250,14 +269,8 @@ async function saveNote(request) {
     
     console.log(`已保存新笔记，当前共有${notes.length}条笔记`);
     
-    // Notify popup about the new note
-    try {
-      chrome.runtime.sendMessage({ type: 'note_saved', note: newNote }).catch(() => {
-        // Popup might not be open, ignore error
-      });
-    } catch (e) {
-      // Ignore if popup is not open
-    }
+    // Notify popup (ignore if not open)
+    chrome.runtime.sendMessage({ type: 'note_saved', note: newNote }).catch(() => {});
     
     return { status: 'success', note: newNote };
   } catch (error) {
