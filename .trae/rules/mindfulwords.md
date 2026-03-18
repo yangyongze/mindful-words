@@ -1,4 +1,4 @@
-Use superpowers skill for  EVERYconversation.
+Use superpowers skill for  EVERY conversation.
 
 Download via domestic mirrors.
 

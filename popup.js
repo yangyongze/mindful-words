@@ -1141,6 +1141,16 @@ const PopupManager = {
   }).join('\n\n---\n\n');
   },
   
+  // 复制到剪贴板
+  copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      this.showToast(this.i18n('copySuccess'));
+    }).catch(err => {
+      console.error('Copy failed:', err);
+      this.showToast(this.i18n('copyFailed'), 'error');
+    });
+  },
+  
   // 显示导出选项
   showExportOptions() {
     const notesToExport = this.data.notes.filter(note => 
