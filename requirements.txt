@@ -1,0 +1,4 @@
+pytest>=9.0
+playwright>=1.58
+Pillow>=10.0
+reportlab>=4.0

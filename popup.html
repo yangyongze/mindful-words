@@ -2,7 +2,9 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" href="data:,">
   <title>Mindful Words</title>
+  <link rel="stylesheet" href="src/core/theme.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -15,7 +17,7 @@
     <div class="header-toolbar">
       <div class="search-container">
         <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" />
-        <button id="clear-search" title="Clear search">
+        <button id="clear-search" data-i18n-title="clearSearch">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -98,7 +100,7 @@
     </div>
   </div>
   
-  <div class="notes-container">
+  <div class="notes-container" id="notes-container">
     <div class="fade-edge fade-top"></div>
     <div class="notes-list" id="notes-list">
     </div>
@@ -140,7 +142,7 @@
   <div id="confirm-modal" class="modal">
     <div class="modal-content modal-sm">
       <div class="modal-header">
-        <h3 id="confirm-title" data-i18n="confirmDelete">Confirm</h3>
+        <h3 id="confirm-title">Confirm</h3>
       </div>
       <div class="modal-body">
         <p id="confirm-message"></p>
@@ -152,31 +154,6 @@
     </div>
   </div>
 
-  <div id="tags-modal" class="modal">
-    <div class="modal-content modal-sm">
-      <div class="modal-header">
-        <h3 data-i18n="editTags">Edit tags</h3>
-        <button id="close-tags-modal" class="close-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="tags-input" data-i18n="tagsLabel">Tags:</label>
-          <input type="text" id="tags-input" data-i18n-placeholder="tagsInputPlaceholder" />
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="cancel-tags" class="btn-secondary" data-i18n="btnCancel">Cancel</button>
-        <button id="save-tags" class="btn-primary" data-i18n="btnSave">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="i18n.js"></script>
-  <script src="popup.js"></script>
+  <script type="module" src="src/popup/main.js"></script>
 </body>
 </html>

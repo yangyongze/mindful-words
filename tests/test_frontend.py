@@ -1,253 +1,380 @@
+"""Behaviour tests for the Mindful Words popup and options pages."""
+
+import json
+import re
+import threading
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+
+import pytest
+from playwright.sync_api import Error as PlaywrightError
+from playwright.sync_api import expect, sync_playwright
+
+ROOT = Path(__file__).resolve().parent.parent
+VERSION = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))["version"]
+
+CHROME_STUB = r"""
+(() => {
+  const data = %DATA%;
+  const listeners = [];
+  const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+
+  const emit = changes => listeners.forEach(listener => listener(changes));
+
+  const local = {
+    QUOTA_BYTES: 5242880,
+    get(keys, callback) {
+      const wanted = typeof keys === 'string' ? [keys]
+        : Array.isArray(keys) ? keys : Object.keys(keys || {});
+      const result = {};
+      wanted.forEach(key => {
+        if (key in data) result[key] = clone(data[key]);
+      });
+      setTimeout(() => callback(result), 0);
+    },
+    set(items, callback) {
+      const changes = {};
+      Object.entries(items).forEach(([key, value]) => {
+        changes[key] = { oldValue: clone(data[key]), newValue: clone(value) };
+        data[key] = clone(value);
+      });
+      setTimeout(() => {
+        if (callback) callback();
+        emit(changes);
+      }, 0);
+    },
+    clear(callback) {
+      Object.keys(data).forEach(key => delete data[key]);
+      setTimeout(() => callback(), 0);
+    },
+    getBytesInUse(_keys, callback) {
+      setTimeout(() => callback(1024), 0);
+    }
+  };
+
+  window.__MW_MESSAGES__ = [];
+  window.__MW_DATA__ = data;
+  window.__MW_SET_NOTES__ = list => {
+    const oldValue = clone(data.notes || []);
+    data.notes = clone(list);
+    emit({ notes: { oldValue, newValue: clone(list) } });
+  };
+
+  window.chrome = {
+    runtime: {
+      id: 'test',
+      lastError: null,
+      getManifest: () => ({ version: '%VERSION%' }),
+      openOptionsPage: () => {},
+      onMessage: { addListener() {} },
+      sendMessage(message, callback) {
+        window.__MW_MESSAGES__.push(clone(message));
+        const payload = message.payload || {};
+        let result = null;
+        if (message.name === 'delete') {
+          result = { deleted: payload.ids.length };
+        } else if (message.name === 'update') {
+          const found = (data.notes || []).find(note => note.id === payload.id) || {};
+          result = { ...found, ...payload.patch };
+        }
+        setTimeout(() => callback({ status: 'success', result }), 0);
+      }
+    },
+    storage: {
+      local,
+      onChanged: { addListener: listener => listeners.push(listener) }
+    }
+  };
+})();
 """
-Mindful Words Chrome Extension - Frontend Tests
-Tests the popup UI functionality using Playwright
-"""
 
-from playwright.sync_api import sync_playwright
-import os
 
-HTML_FILE = r'd:\CodeAICo\mindful-words\popup.html'
-
-def test_page_loads():
-    """Test that the popup page loads correctly"""
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(f'file://{HTML_FILE}')
-        page.wait_for_load_state('networkidle')
-        
-        # Take screenshot
-        page.screenshot(path='/tmp/mindful-words-01-load.png')
-        
-        # Check header exists
-        header = page.locator('.header')
-        assert header.count() == 1, "Header should exist"
-        
-        # Check search input exists
-        search = page.locator('#search-input')
-        assert search.count() == 1, "Search input should exist"
-        
-        # Check filter buttons exist
-        filter_tags = page.locator('#filter-tags-btn')
-        assert filter_tags.count() == 1, "Filter tags button should exist"
-        
-        filter_time = page.locator('#filter-time-btn')
-        assert filter_time.count() == 1, "Filter time button should exist"
-        
-        filter_source = page.locator('#filter-source-btn')
-        assert filter_source.count() == 1, "Filter source button should exist"
-        
-        # Check select button exists
-        select_btn = page.locator('#select-btn')
-        assert select_btn.count() == 1, "Select button should exist"
-        
-        print("✅ Page loads correctly")
-        browser.close()
-
-def test_filter_buttons():
-    """Test that filter buttons show dropdowns"""
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(f'file://{HTML_FILE}')
-        page.wait_for_load_state('networkidle')
-        
-        # Click tags filter button
-        page.click('#filter-tags-btn')
-        page.wait_for_timeout(200)
-        page.screenshot(path='/tmp/mindful-words-02-tags-dropdown.png')
-        
-        # Check dropdown appeared
-        dropdown = page.locator('.filter-dropdown')
-        assert dropdown.count() >= 1, "Tags dropdown should appear"
-        
-        # Click outside to close
-        page.click('body', position={'x': 10, 'y': 10})
-        page.wait_for_timeout(200)
-        
-        # Click time filter button
-        page.click('#filter-time-btn')
-        page.wait_for_timeout(200)
-        page.screenshot(path='/tmp/mindful-words-03-time-dropdown.png')
-        
-        # Check dropdown appeared
-        dropdown = page.locator('.filter-dropdown')
-        assert dropdown.count() >= 1, "Time dropdown should appear"
-        
-        # Click outside to close
-        page.click('body', position={'x': 10, 'y': 10})
-        page.wait_for_timeout(200)
-        
-        # Click source filter button
-        page.click('#filter-source-btn')
-        page.wait_for_timeout(200)
-        page.screenshot(path='/tmp/mindful-words-04-source-dropdown.png')
-        
-        # Check dropdown appeared
-        dropdown = page.locator('.filter-dropdown')
-        assert dropdown.count() >= 1, "Source dropdown should appear"
-        
-        print("✅ Filter buttons work correctly")
-        browser.close()
-
-def test_search_input():
-    """Test search input functionality"""
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(f'file://{HTML_FILE}')
-        page.wait_for_load_state('networkidle')
-        
-        # Type in search
-        search_input = page.locator('#search-input')
-        search_input.fill('test search')
-        page.wait_for_timeout(300)
-        page.screenshot(path='/tmp/mindful-words-05-search.png')
-        
-        # Check clear button exists
-        clear_btn = page.locator('#clear-search')
-        assert clear_btn.count() == 1, "Clear search button should exist"
-        
-        # Clear search
-        clear_btn.click()
-        page.wait_for_timeout(200)
-        
-        # Check search is cleared
-        value = search_input.input_value()
-        assert value == '', "Search input should be cleared"
-        
-        print("✅ Search input works correctly")
-        browser.close()
-
-def test_select_mode():
-    """Test selection mode functionality"""
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(f'file://{HTML_FILE}')
-        page.wait_for_load_state('networkidle')
-        
-        # Click select button
-        page.click('#select-btn')
-        page.wait_for_timeout(200)
-        page.screenshot(path='/tmp/mindful-words-06-select-mode.png')
-        
-        # Check selection bar appeared
-        selection_bar = page.locator('#selection-bar')
-        assert selection_bar.count() == 1, "Selection bar should appear"
-        
-        # Check selection bar is visible (not hidden)
-        is_hidden = selection_bar.evaluate('el => el.classList.contains("hidden")')
-        assert not is_hidden, "Selection bar should be visible"
-        
-        # Check copy and export buttons exist
-        copy_btn = page.locator('#copy-selected-btn')
-        assert copy_btn.count() == 1, "Copy button should exist"
-        
-        export_btn = page.locator('#export-selected-btn')
-        assert export_btn.count() == 1, "Export button should exist"
-        
-        # Click cancel to exit selection mode
-        page.click('#cancel-selection-btn')
-        page.wait_for_timeout(200)
-        
-        # Check selection bar is hidden again
-        is_hidden = selection_bar.evaluate('el => el.classList.contains("hidden")')
-        assert is_hidden, "Selection bar should be hidden after cancel"
-        
-        print("✅ Selection mode works correctly")
-        browser.close()
-
-def test_empty_state():
-    """Test empty state display"""
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(f'file://{HTML_FILE}')
-        page.wait_for_load_state('networkidle')
-        
-        # Check empty state exists (no notes)
-        empty_state = page.locator('.empty-state')
-        page.screenshot(path='/tmp/mindful-words-07-empty-state.png')
-        
-        # Check empty state icon
-        empty_icon = page.locator('.empty-icon')
-        assert empty_icon.count() >= 0, "Empty icon should exist"
-        
-        # Check empty state title
-        empty_title = page.locator('.empty-title')
-        assert empty_title.count() >= 0, "Empty title should exist"
-        
-        print("✅ Empty state displays correctly")
-        browser.close()
-
-def test_css_styles():
-    """Test that CSS styles are applied correctly"""
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(f'file://{HTML_FILE}')
-        page.wait_for_load_state('networkidle')
-        
-        # Check header has correct background
-        header = page.locator('.header')
-        bg_color = header.evaluate('el => window.getComputedStyle(el).backgroundColor')
-        print(f"  Header background: {bg_color}")
-        
-        # Check filter buttons have correct styling
-        filter_btn = page.locator('#filter-tags-btn')
-        border_radius = filter_btn.evaluate('el => window.getComputedStyle(el).borderRadius')
-        print(f"  Filter button border-radius: {border_radius}")
-        
-        # Check CSS variables are defined
-        root_vars = page.evaluate('''() => {
-            const styles = getComputedStyle(document.documentElement);
-            return {
-                accentColor: styles.getPropertyValue('--accent-color'),
-                transitionFast: styles.getPropertyValue('--transition-fast')
-            };
-        }''')
-        print(f"  CSS variables: {root_vars}")
-        
-        page.screenshot(path='/tmp/mindful-words-08-styles.png')
-        
-        print("✅ CSS styles applied correctly")
-        browser.close()
-
-def main():
-    print("=" * 50)
-    print("Mindful Words - Frontend Tests")
-    print("=" * 50)
-    
-    tests = [
-        ("Page Loads", test_page_loads),
-        ("Filter Buttons", test_filter_buttons),
-        ("Search Input", test_search_input),
-        ("Select Mode", test_select_mode),
-        ("Empty State", test_empty_state),
-        ("CSS Styles", test_css_styles),
+def sample_notes():
+    return [
+        {
+            "id": 1,
+            "content": "Alpha content",
+            "note": "a thought",
+            "title": "Alpha",
+            "url": "https://www.example.com/page",
+            "createdAt": "2026-01-02T10:00:00.000Z",
+            "updatedAt": "2026-01-02T10:00:00.000Z",
+            "tags": ["work"],
+        },
+        {
+            "id": 2,
+            "content": "Beta content",
+            "note": "",
+            "title": "Beta",
+            "url": "https://news.example.org/story",
+            "createdAt": "2026-01-01T10:00:00.000Z",
+            "updatedAt": "2026-01-01T10:00:00.000Z",
+            "tags": ["ideas"],
+        },
     ]
-    
-    passed = 0
-    failed = 0
-    
-    for name, test_func in tests:
-        print(f"\n▶ Running: {name}")
-        try:
-            test_func()
-            passed += 1
-        except Exception as e:
-            print(f"❌ Failed: {e}")
-            failed += 1
-    
-    print("\n" + "=" * 50)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 50)
-    
-    if failed == 0:
-        print("\n🎉 All tests passed!")
-    else:
-        print(f"\n⚠️ {failed} test(s) failed")
 
-if __name__ == '__main__':
-    main()
+
+@pytest.fixture(scope="session")
+def server():
+    class Handler(SimpleHTTPRequestHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=str(ROOT), **kwargs)
+
+        def log_message(self, *_args):
+            pass
+
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{httpd.server_address[1]}"
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+        thread.join(timeout=5)
+
+
+@pytest.fixture(scope="session")
+def browser():
+    with sync_playwright() as playwright:
+        try:
+            instance = playwright.chromium.launch(headless=True)
+        except PlaywrightError:
+            # Playwright's bundled browser is optional when a system Chrome is installed.
+            instance = playwright.chromium.launch(headless=True, channel="chrome")
+        try:
+            yield instance
+        finally:
+            instance.close()
+
+
+@pytest.fixture
+def page(browser):
+    context = browser.new_context(accept_downloads=True)
+    page = context.new_page()
+    errors = []
+    page.on("pageerror", lambda error: errors.append(str(error)))
+    page.on("console", lambda message: errors.append(message.text) if message.type == "error" else None)
+    try:
+        yield page
+    finally:
+        context.close()
+    assert not errors, f"Uncaught page errors: {errors}"
+
+
+def open_page(page, server, name, notes, settings, ready_selector):
+    data = {
+        "notes": notes if notes is not None else [],
+        "settings": settings if settings is not None else {"theme": "light", "language": "en"},
+    }
+    script = (CHROME_STUB
+              .replace("%DATA%", json.dumps(data, ensure_ascii=False))
+              .replace("%VERSION%", VERSION))
+    page.add_init_script(script=script)
+    page.goto(f"{server}/{name}")
+    page.wait_for_function(ready_selector)
+
+
+def open_popup(page, server, notes=None, settings=None):
+    open_page(
+        page, server, "popup.html", notes, settings,
+        "document.querySelector('#notes-list').children.length > 0",
+    )
+
+
+def open_options(page, server, notes=None, settings=None):
+    open_page(
+        page, server, "options.html", notes, settings,
+        "document.querySelector('#tag-list').children.length > 0",
+    )
+
+
+def last_command(page):
+    return page.evaluate("window.__MW_MESSAGES__.at(-1)")
+
+
+def test_renders_notes_from_storage(page, server):
+    open_popup(page, server, sample_notes())
+
+    items = page.locator(".note-item")
+    expect(items).to_have_count(2)
+    expect(items.first).to_contain_text("Alpha content")
+    expect(items.first.locator(".note-url")).to_have_text("example.com")
+    expect(items.first.locator(".tag")).to_have_text("work")
+    expect(items.first.locator(".note-personal-note")).to_contain_text("a thought")
+
+
+def test_empty_state_describes_the_real_situation(page, server):
+    open_popup(page, server)
+    expect(page.locator(".empty-title")).to_have_text("No notes yet")
+
+
+def test_search_filters_notes_and_clear_restores_them(page, server):
+    open_popup(page, server, sample_notes())
+
+    page.locator("#search-input").fill("Alpha")
+    expect(page.locator(".note-item")).to_have_count(1)
+    expect(page.locator(".empty-title")).to_have_count(0)
+
+    page.locator("#clear-search").click()
+    expect(page.locator("#search-input")).to_have_value("")
+    expect(page.locator(".note-item")).to_have_count(2)
+
+
+def test_selection_mode_updates_actions(page, server):
+    open_popup(page, server, sample_notes())
+
+    page.locator("#select-btn").click()
+    expect(page.locator("#selection-bar")).to_be_visible()
+    expect(page.locator("#copy-selected-btn")).to_be_disabled()
+
+    page.locator(".note-item").first.click()
+    expect(page.locator("#selection-count")).to_have_text("Selected 1 items")
+
+    page.locator("#select-all-checkbox").check()
+    expect(page.locator("#selection-count")).to_have_text("Selected 2 items")
+    expect(page.locator("#copy-selected-btn")).to_be_enabled()
+
+    page.locator("#cancel-selection-btn").click()
+    expect(page.locator("#selection-bar")).to_be_hidden()
+    expect(page.locator("#copy-selected-btn")).to_be_disabled()
+
+
+def test_tag_filter_and_chips(page, server):
+    open_popup(page, server, sample_notes())
+
+    page.locator("#filter-tags-btn").click()
+    expect(page.locator(".filter-dropdown")).to_have_count(1)
+    page.locator('.filter-dropdown input[value="work"]').check()
+    page.locator(".filter-dropdown .btn-confirm").click()
+
+    expect(page.locator(".note-item")).to_have_count(1)
+    expect(page.locator(".filter-tag")).to_have_count(1)
+
+    page.locator("#clear-filters-btn").click()
+    expect(page.locator(".note-item")).to_have_count(2)
+    expect(page.locator(".filter-tag")).to_have_count(0)
+
+
+def test_editing_a_note_sends_one_update_command(page, server):
+    open_popup(page, server, sample_notes())
+
+    page.locator(".note-item").first.click()
+    expect(page.locator("#edit-modal")).to_be_visible()
+    page.locator("#edit-content").fill("Changed content")
+    page.locator("#save-edit").click()
+
+    expect(page.locator("#edit-modal")).to_be_hidden()
+    expect(page.locator(".note-item").first).to_contain_text("Changed content")
+    command = last_command(page)
+    assert command["name"] == "update"
+    assert command["payload"] == {
+        "id": 1,
+        "patch": {"content": "Changed content", "note": "a thought", "tags": ["work"]},
+    }
+
+
+def test_deleting_a_note_sends_one_delete_command(page, server):
+    open_popup(page, server, sample_notes())
+
+    page.locator(".delete-btn").first.click()
+    expect(page.locator("#confirm-modal")).to_be_visible()
+    page.locator("#confirm-ok").click()
+
+    expect(page.locator(".note-item")).to_have_count(1)
+    assert last_command(page)["name"] == "delete"
+    assert last_command(page)["payload"]["ids"] == [1]
+
+
+def test_export_menu_downloads_selected_notes(page, server):
+    open_popup(page, server, sample_notes())
+
+    page.locator("#select-btn").click()
+    page.locator("#select-all-checkbox").check()
+    page.locator("#export-selected-btn").click()
+    expect(page.locator(".export-option")).to_have_count(4)
+
+    with page.expect_download() as download_info:
+        page.locator('.export-option[data-format="json"]').click()
+    download = download_info.value
+    assert download.suggested_filename == "mindful_notes.json"
+    content = Path(download.path()).read_text(encoding="utf-8")
+    assert "Alpha content" in content
+    assert "Beta content" in content
+
+
+def test_language_setting_translates_every_label(page, server):
+    open_popup(page, server, sample_notes(), {"theme": "light", "language": "zh_CN"})
+
+    expect(page.locator("#search-input")).to_have_attribute("placeholder", "搜索笔记...")
+    page.locator("#select-btn").click()
+    page.locator("#select-all-checkbox").check()
+    page.locator("#export-selected-btn").click()
+
+    label = page.locator(".export-option-ai .option-label").inner_text()
+    assert label != "sendToAnki"
+    assert re.search(r"[一-鿿]", label)
+
+
+def test_theme_variables_and_dark_setting(page, server):
+    open_popup(page, server, sample_notes(), {"theme": "dark", "language": "en"})
+
+    expect(page.locator("html")).to_have_attribute("data-theme", "dark")
+    variables = page.evaluate("""() => {
+      const styles = getComputedStyle(document.documentElement);
+      return {
+        accent: styles.getPropertyValue('--accent-color').trim(),
+        hover: styles.getPropertyValue('--accent-hover-color').trim(),
+      };
+    }""")
+    assert variables["accent"] == "#0a84ff"
+    assert variables["hover"] == "#409cff"
+
+
+def test_storage_change_refreshes_the_list(page, server):
+    open_popup(page, server, sample_notes()[:1])
+
+    page.evaluate("""notes => window.__MW_SET_NOTES__(notes)""", sample_notes())
+    expect(page.locator(".note-item")).to_have_count(2)
+    expect(page.locator(".mw-toast--top")).to_have_count(1)
+
+
+def test_options_derives_tags_and_stats_from_notes(page, server):
+    open_options(page, server, sample_notes())
+
+    expect(page.locator("#total-notes")).to_have_text("2")
+    expect(page.locator("#total-tags")).to_have_text("2")
+    expect(page.locator("#total-sources")).to_have_text("2")
+    expect(page.locator("#tag-list .tag-item")).to_have_count(2)
+    expect(page.locator("#tag-count")).to_have_text("2 tags")
+    expect(page.locator("#about-version")).to_have_text(f"v{VERSION}")
+
+
+def test_options_language_change_retranslates(page, server):
+    open_options(page, server, sample_notes())
+
+    page.locator("#language").select_option("zh_CN")
+    expect(page.locator("#save-settings span")).to_have_text("保存设置")
+    expect(page.locator('[data-i18n="settingsTitle"]')).to_have_text("设置")
+    assert page.evaluate("window.__MW_DATA__.settings.language") == "zh_CN"
+
+
+def test_options_tag_removal_sends_one_command(page, server):
+    open_options(page, server, sample_notes())
+    page.on("dialog", lambda dialog: dialog.accept())
+
+    page.locator('.nav-item[data-section="tags"]').click()
+    expect(page.locator("#section-tags")).to_have_class("content-section active")
+    page.locator('.tag-remove[data-tag="work"]').click()
+    assert last_command(page) == {"type": "mw:command", "name": "removeTag", "payload": {"tag": "work"}}
+
+
+def test_scrolling_the_real_container_persists_the_position(page, server):
+    open_popup(page, server, sample_notes() * 4)
+    page.add_style_tag(content=".notes-container { max-height: 80px; }")
+
+    page.evaluate("document.querySelector('#notes-container').scrollTop = 50")
+    page.dispatch_event("#notes-container", "scroll")
+    page.wait_for_function("window.__MW_DATA__['popup_scroll_position'] > 0")
+
+    assert page.evaluate("window.__MW_DATA__['popup_scroll_position']") == 50

@@ -1,77 +1,5 @@
-/* CSS 变量定义 - 与 popup.css 保持一致 */
 :root {
-  --primary-color: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: #818cf8;
-  
-  --text-primary: #1d1d1f;
-  --text-secondary: #86868b;
-  --text-tertiary: #6e6e73;
-  --text-meta: #98989d;
-  
-  --background-primary: #ffffff;
-  --background-secondary: #f5f5f7;
-  --background-card: #f9fafb;
-  
-  --border-color: rgba(0, 0, 0, 0.1);
-  
-  --success-color: #34c759;
-  --error-color: #ff3b30;
-  
-  --hover-bg-color: rgba(0, 0, 0, 0.04);
-  --pressed-bg-color: rgba(0, 0, 0, 0.08);
-  
-  --accent-color: #0066cc;
-  
-  --font-family-base: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 20px;
-  
-  --border-radius-sm: 4px;
-  --border-radius-md: 6px;
-  --border-radius-lg: 8px;
-  --border-radius-xl: 12px;
-  
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.1);
-  
-  --transition-fast: 150ms ease-out;
-  --transition-normal: 200ms ease-out;
-  --transition-slow: 300ms ease-out;
-  
-  --bg-color: var(--background-primary);
-  --card-bg-color: var(--background-card);
-  --text-color: var(--text-primary);
-  --secondary-text: var(--text-secondary);
-  --meta-text-color: var(--text-meta);
-  --font-sans: var(--font-family-base);
-  
   --sidebar-width: 200px;
-}
-
-[data-theme="dark"] {
-  --text-primary: #f5f5f7;
-  --text-secondary: #98989d;
-  --text-tertiary: #98989d;
-  --text-meta: #86868b;
-  
-  --background-primary: #1c1c1e;
-  --background-secondary: #2c2c2e;
-  --background-card: #111827;
-  
-  --border-color: rgba(255, 255, 255, 0.15);
-  --hover-bg-color: rgba(255, 255, 255, 0.1);
-  --pressed-bg-color: rgba(255, 255, 255, 0.15);
-  
-  --bg-color: var(--background-primary);
-  --card-bg-color: var(--background-card);
-  --text-color: var(--text-primary);
-  --secondary-text: var(--text-secondary);
-  --meta-text-color: var(--text-meta);
 }
 
 * {
@@ -334,52 +262,6 @@ body {
   color: var(--error-color);
 }
 
-.tag-input-wrapper {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.tag-input {
-  flex: 1;
-  padding: 10px 14px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-size: 14px;
-  font-family: var(--font-sans);
-  transition: border-color var(--transition-fast);
-}
-
-.tag-input:focus {
-  outline: none;
-  border-color: var(--accent-color);
-}
-
-.tag-input::placeholder {
-  color: var(--text-meta);
-}
-
-.btn-add-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: var(--border-radius-md);
-  background-color: var(--accent-color);
-  color: white;
-  font-size: 14px;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  transition: opacity var(--transition-fast);
-}
-
-.btn-add-tag:hover {
-  opacity: 0.9;
-}
-
 .tag-list-header {
   display: flex;
   align-items: center;
@@ -467,57 +349,6 @@ body {
   width: 0%;
 }
 
-.shortcut-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.shortcut-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.shortcut-item:last-child {
-  border-bottom: none;
-}
-
-.shortcut-desc {
-  font-size: 14px;
-  color: var(--text-color);
-}
-
-.shortcut-key {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  font-size: 12px;
-  font-family: monospace;
-  color: var(--text-color);
-}
-
-.shortcut-tip {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 12px;
-  background-color: rgba(0, 102, 204, 0.05);
-  border-radius: var(--border-radius-md);
-  font-size: 13px;
-  color: var(--secondary-text);
-}
-
-.shortcut-tip svg {
-  flex-shrink: 0;
-  color: var(--accent-color);
-}
-
 .about-card {
   text-align: center;
   padding: 32px 16px;
@@ -549,35 +380,6 @@ body {
   max-width: 320px;
   margin: 0 auto 24px;
   line-height: 1.6;
-}
-
-.about-links {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.about-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  color: var(--text-color);
-  text-decoration: none;
-  font-size: 13px;
-  transition: all var(--transition-fast);
-}
-
-.about-link:hover {
-  background-color: var(--hover-bg-color);
-  text-decoration: none;
-}
-
-.about-link svg {
-  color: var(--accent-color);
 }
 
 .stats-card {
@@ -651,53 +453,6 @@ body {
   transform: scale(0.98);
 }
 
-.notification {
-  position: fixed;
-  bottom: 80px;
-  right: 32px;
-  padding: 12px 20px;
-  border-radius: var(--border-radius-md);
-  color: white;
-  font-size: 14px;
-  z-index: 1000;
-  box-shadow: var(--shadow-hover);
-  animation: notificationIn var(--transition-normal);
-}
-
-.notification.success {
-  background-color: var(--success-color);
-}
-
-.notification.error {
-  background-color: var(--error-color);
-}
-
-.notification.fadeout {
-  animation: notificationOut var(--transition-normal) forwards;
-}
-
-@keyframes notificationIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes notificationOut {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-}
-
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -727,9 +482,6 @@ body {
   background-color: rgba(0, 102, 204, 0.2);
 }
 
-[data-theme="dark"] .shortcut-tip {
-  background-color: rgba(0, 102, 204, 0.1);
-}
 
 [data-theme="dark"] .setting-item.danger {
   background-color: rgba(255, 59, 48, 0.1);
