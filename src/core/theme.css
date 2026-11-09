@@ -1,5 +1,9 @@
 :root {
-  --primary-color: #4f46e5;
+  color-scheme: light;
+
+  /* One accent for the whole product. --primary-color is kept as an alias so
+     older rules cannot silently reintroduce a second blue. */
+  --primary-color: var(--accent-color);
 
   --text-primary: #1d1d1f;
   --text-secondary: #86868b;
@@ -7,17 +11,23 @@
 
   --background-primary: #ffffff;
   --background-secondary: #f5f5f7;
-  --background-card: #f9fafb;
+  --background-card: #f7f8fa;
 
-  --border-color: rgba(0, 0, 0, 0.1);
+  --border-color: #e3e4e8;
   --error-color: #ff3b30;
 
   --hover-bg-color: rgba(0, 0, 0, 0.04);
   --pressed-bg-color: rgba(0, 0, 0, 0.08);
 
-  --accent-color: #0066cc;
-  --accent-hover-color: #0055b3;
-  --accent-color-light: rgba(0, 102, 204, 0.1);
+  --accent-color: #534ab7;
+  --accent-hover-color: #4439a0;
+  --accent-color-light: rgba(83, 74, 183, 0.10);
+  --accent-ink: #ffffff;
+  --accent-soft-bg: #eeedfe;
+  --accent-soft-border: #afa9ec;
+  --accent-strong: #3c3489;
+  --chip-bg: #f5f5f7;
+  --chip-text: #5f5e5a;
   --warning-color: #ff9500;
 
   --font-family-base: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -39,19 +49,37 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --text-primary: #f5f5f7;
   --text-secondary: #98989d;
   --text-meta: #86868b;
 
   --background-primary: #1c1c1e;
   --background-secondary: #2c2c2e;
-  --background-card: #111827;
+  /* Cards must sit ABOVE the background, not sink below it. */
+  --background-card: #2b2b31;
 
-  --border-color: rgba(255, 255, 255, 0.15);
+  --border-color: #3a3a3c;
   --hover-bg-color: rgba(255, 255, 255, 0.1);
   --pressed-bg-color: rgba(255, 255, 255, 0.15);
 
-  --accent-color: #0a84ff;
-  --accent-hover-color: #409cff;
-  --accent-color-light: rgba(10, 132, 255, 0.16);
+  --accent-color: #7f77dd;
+  --accent-hover-color: #9189e8;
+  --accent-color-light: rgba(127, 119, 221, 0.16);
+  --accent-ink: #171a20;
+  --accent-soft-bg: #3a3556;
+  --accent-soft-border: #7f77dd;
+  --accent-strong: #cecbf6;
+  --chip-bg: #2c2c2e;
+  --chip-text: #c7c7cc;
+}
+
+/* The theme attribute is applied by script after the first paint. Suppress
+   transitions for that one frame, otherwise dark-mode chips visibly flash
+   light before settling. */
+html.theme-switch *,
+html.theme-switch *::before,
+html.theme-switch *::after {
+  transition: none !important;
+  animation: none !important;
 }

@@ -9,30 +9,20 @@
 </head>
 <body>
   <header class="header">
-    <div class="header-content">
-      <h1 class="header-title">Mindful Words</h1>
-      <p class="header-subtitle" data-i18n="extDescription">are seeds, action makes them grow. Try, fail, learn, then you'll truly know.</p>
-    </div>
-      
-    <div class="header-toolbar">
-      <div class="search-container">
-        <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" />
-        <button id="clear-search" data-i18n-title="clearSearch">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+    <div class="topbar">
+      <div class="brand">
+        <img class="brand-mark" src="icons/icon16.png" width="16" height="16" alt="">
+        <span class="brand-name">Mindful Words</span>
       </div>
-      
-      <div class="header-actions">
-        <button id="select-btn" data-i18n-title="btnSelect">
+      <div class="topbar-right">
+        <span id="results-count" class="results-count"></span>
+        <button id="select-btn" class="icon-btn" data-i18n-title="btnSelect">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 11 12 14 22 4"></polyline>
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
           </svg>
         </button>
-        <button id="settings-btn" data-i18n-title="btnSettings">
+        <button id="settings-btn" class="icon-btn" data-i18n-title="btnSettings">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -40,66 +30,88 @@
         </button>
       </div>
     </div>
-    
-    <div id="filter-bar" class="filter-bar">
-      <div class="filter-buttons">
-        <button id="filter-tags-btn" class="filter-btn">
-          <span data-i18n="filterTags">Tags</span>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"></polyline>
+
+    <div id="workspace" class="workspace">
+      <div class="search-row">
+        <div class="search-container">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
           </svg>
-        </button>
-        <button id="filter-time-btn" class="filter-btn">
-          <span data-i18n="filterTime">Time</span>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        <button id="filter-source-btn" class="filter-btn">
-          <span data-i18n="filterSource">Source</span>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        <button id="clear-filters-btn" class="filter-btn filter-btn-clear hidden" data-i18n="clearFilters">Clear filters</button>
+          <input type="text" id="search-input" autocomplete="off" data-i18n-placeholder="searchPlaceholder" />
+          <button id="clear-search" class="clear-search hidden" data-i18n-title="clearSearch">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
       </div>
-      <div id="active-filters" class="active-filters hidden"></div>
+
+      <div id="filter-bar" class="filter-row">
+        <button id="filter-tags-btn" class="filter-btn" type="button">
+          <span class="chip-label" data-i18n="filterTags">Tags</span>
+          <span class="chip-value hidden"></span>
+          <svg class="chip-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+          <span class="chip-clear hidden" data-filter="tags" data-i18n-title="clearFilters" role="button">×</span>
+        </button>
+        <button id="filter-time-btn" class="filter-btn" type="button">
+          <span class="chip-label" data-i18n="filterTime">Time</span>
+          <span class="chip-value hidden"></span>
+          <svg class="chip-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+          <span class="chip-clear hidden" data-filter="time" data-i18n-title="clearFilters" role="button">×</span>
+        </button>
+        <button id="filter-source-btn" class="filter-btn" type="button">
+          <span class="chip-label" data-i18n="filterSource">Source</span>
+          <span class="chip-value hidden"></span>
+          <svg class="chip-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+          <span class="chip-clear hidden" data-filter="source" data-i18n-title="clearFilters" role="button">×</span>
+        </button>
+        <span class="filter-spacer"></span>
+        <button id="clear-filters-btn" class="clear-filters hidden" data-i18n="btnClear" data-i18n-title="clearFilters">Clear</button>
+      </div>
+    </div>
+
+    <div id="selection-bar" class="selection-bar hidden">
+      <div class="selection-info">
+        <label class="select-all-label">
+          <input type="checkbox" id="select-all-checkbox" />
+          <span data-i18n="selectAll">Select all</span>
+        </label>
+        <span id="selection-count">0</span>
+      </div>
+      <div class="selection-actions">
+        <button id="copy-selected-btn" class="btn-action btn-primary" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span data-i18n="btnCopy">Copy</span>
+        </button>
+        <button id="export-selected-btn" class="btn-action btn-primary" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          </svg>
+          <span data-i18n="btnExport">Export</span>
+        </button>
+        <button id="delete-selected-btn" class="btn-action btn-danger" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span data-i18n="btnDelete">Delete</span>
+        </button>
+        <button id="cancel-selection-btn" class="btn-action btn-cancel" data-i18n="btnCancel">Cancel</button>
+      </div>
     </div>
   </header>
-  
-  <div id="selection-bar" class="selection-bar hidden">
-    <div class="selection-info">
-      <label class="select-all-label">
-        <input type="checkbox" id="select-all-checkbox" />
-        <span data-i18n="selectAll">Select all</span>
-      </label>
-      <span id="selection-count">0</span>
-    </div>
-    <div class="selection-actions">
-      <button id="copy-selected-btn" class="btn-action btn-primary" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-        <span data-i18n="btnCopy">Copy</span>
-      </button>
-      <button id="export-selected-btn" class="btn-action btn-primary" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        </svg>
-        <span data-i18n="btnExport">Export</span>
-      </button>
-      <button id="delete-selected-btn" class="btn-action btn-danger" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-        <span data-i18n="btnDelete">Delete</span>
-      </button>
-      <button id="cancel-selection-btn" class="btn-action btn-cancel" data-i18n="btnCancel">Cancel</button>
-    </div>
-  </div>
-  
+
   <div class="notes-container" id="notes-container">
     <div class="fade-edge fade-top"></div>
     <div class="notes-list" id="notes-list">

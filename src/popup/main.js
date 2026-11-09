@@ -37,7 +37,8 @@ const ELEMENT_IDS = {
   filterTimeBtn: 'filter-time-btn',
   filterSourceBtn: 'filter-source-btn',
   clearFiltersBtn: 'clear-filters-btn',
-  activeFilters: 'active-filters'
+  workspace: 'workspace',
+  resultsCount: 'results-count'
 };
 
 const elements = Object.fromEntries(
@@ -64,9 +65,13 @@ function visibleNotes() {
 }
 
 function renderVisible() {
-  view.render(visibleNotes());
+  const visible = visibleNotes();
+  view.render(visible);
   filters.updateActive();
-  filters.updateButtons();
+  elements.resultsCount.textContent = visible.length === 1
+    ? i18n.get('notesCountOne')
+    : i18n.get('notesCount', visible.length);
+  elements.clearSearchBtn.classList.toggle('hidden', !elements.searchInput.value);
   updateSelectionUI();
 }
 
@@ -91,6 +96,7 @@ function toggleSelectionMode() {
   }
   state.selectionMode = true;
   state.selected.clear();
+  elements.workspace.classList.add('hidden');
   elements.selectionBar.classList.remove('hidden');
   elements.selectBtn.classList.add('active');
   renderVisible();
@@ -99,6 +105,7 @@ function toggleSelectionMode() {
 function exitSelectionMode() {
   state.selectionMode = false;
   state.selected.clear();
+  elements.workspace.classList.remove('hidden');
   elements.selectionBar.classList.add('hidden');
   elements.selectBtn.classList.remove('active');
   elements.selectAllCheckbox.checked = false;

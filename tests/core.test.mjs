@@ -89,6 +89,9 @@ test('selectNotes combines query, tags, sources and time', () => {
   assert.equal(selectNotes(notes, '', filters, MW).length, 2);
   assert.deepEqual(selectNotes(notes, 'alpha', filters, MW).map(n => n.id), [1]);
   assert.deepEqual(selectNotes(notes, 'a thought', filters, MW).map(n => n.id), [1]);
+  assert.deepEqual(selectNotes(notes, 'work', filters, MW).map(n => n.id), [1]);
+  assert.deepEqual(selectNotes(notes, 'example.com', filters, MW).map(n => n.id), [1]);
+  assert.equal(selectNotes(notes, 'ideas', filters, MW).length, 2);
   assert.deepEqual(
     selectNotes(notes, '', { ...filters, sources: ['example.com'] }, MW).map(n => n.id),
     [1]

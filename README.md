@@ -26,8 +26,8 @@ Each note holds `content`, `note` (your own comment), `title`, `url`, `tags`, `c
 
 ### Organize
 
-- Side panel with full-text search across content, title and personal note.
-- Filters by tag, source site and time — today, yesterday, this week, this month, last 7 / 30 days, or a custom date range. Active filters appear as removable chips.
+- Side panel with full-text search across content, title, personal note, tags and source host.
+- Filters by tag, source site and time — today, yesterday, this week, this month, last 7 / 30 days, or a custom date range. Each filter chip shows its own selected value and an inline ×; there is no separate chip row.
 - Click a card to edit its content, personal note and tags. `Escape` or a backdrop click closes a modal.
 - Multi-select mode: copy to clipboard, export, or delete in bulk. **Select all** applies only to the currently visible (filtered) notes.
 - The scroll position is restored whenever the side panel reopens.
@@ -138,7 +138,7 @@ npm test
 | Command | Coverage |
 | --- | --- |
 | `npm run test:core` | 11 Node tests: i18n, note model, filtering, HTML escaping, backup format, settings contract, command protocol |
-| `npm run test:ui` | 15 Playwright tests: rendering, search, filters, selection, editing, export, theme and language switching, options page, scroll persistence |
+| `npm run test:ui` | 18 Playwright tests: rendering, search (incl. tags / source), filter chip state, equal-height selection replacement, result count, editing, export, theme and language switching, options page, scroll persistence |
 
 The browser suite serves the repository over a local HTTP server and injects a `chrome` stub before page load, so it does not require the extension to be installed. It falls back to a system Chrome when the bundled Playwright browser is unavailable.
 

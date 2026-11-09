@@ -88,7 +88,7 @@ body {
 
 .nav-item.active {
   background-color: var(--accent-color);
-  color: white;
+  color: var(--accent-ink);
 }
 
 .nav-icon {
@@ -288,7 +288,7 @@ body {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background-color: rgba(0, 102, 204, 0.1);
+  background-color: var(--accent-color-light);
   color: var(--accent-color);
   border-radius: var(--border-radius-md);
   font-size: 13px;
@@ -437,7 +437,7 @@ body {
   border: none;
   border-radius: var(--border-radius-md);
   background-color: var(--accent-color);
-  color: white;
+  color: var(--accent-ink);
   font-size: 14px;
   font-weight: 500;
   font-family: var(--font-sans);
@@ -479,7 +479,8 @@ body {
 }
 
 [data-theme="dark"] .tag-item {
-  background-color: rgba(0, 102, 204, 0.2);
+  color: var(--accent-strong);
+  background-color: var(--accent-soft-bg);
 }
 
 

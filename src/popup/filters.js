@@ -61,9 +61,16 @@ export function selectNotes(list, query, filters, MW) {
       if (created < filters.timeRange.start || created > filters.timeRange.end) return false;
     }
     if (filters.sources.length && !filters.sources.includes(MW.notes.hostname(note.url))) return false;
-    if (text && ![note.content, note.title, note.note]
-      .some(value => String(value ?? '').toLowerCase().includes(text))) {
-      return false;
+    // Search must cover everything the user can see on a card: text, tags and source.
+    if (text) {
+      const fields = [
+        note.content,
+        note.title,
+        note.note,
+        ...(note.tags || []),
+        MW.notes.hostname(note.url)
+      ];
+      if (!fields.some(value => String(value ?? '').toLowerCase().includes(text))) return false;
     }
     return true;
   });
@@ -73,14 +80,19 @@ export function createFilters({ MW, state, elements, onChange }) {
   const { i18n, ui, notes } = MW;
   let outsideHandler = null;
 
+  const buttons = {
+    tags: elements.filterTagsBtn,
+    time: elements.filterTimeBtn,
+    source: elements.filterSourceBtn
+  };
+
   function close() {
     if (outsideHandler) {
       document.removeEventListener('click', outsideHandler);
       outsideHandler = null;
     }
     document.querySelectorAll('.filter-dropdown').forEach(element => element.remove());
-    [elements.filterTagsBtn, elements.filterTimeBtn, elements.filterSourceBtn]
-      .forEach(button => button.classList.remove('active'));
+    Object.values(buttons).forEach(button => button.classList.remove('active'));
   }
 
   function checkboxes(tags, selected, emptyKey) {
@@ -165,7 +177,6 @@ export function createFilters({ MW, state, elements, onChange }) {
     const dropdown = document.createElement('div');
     dropdown.className = 'filter-dropdown';
     dropdown.style.top = `${rect.bottom + 4}px`;
-    dropdown.style.left = `${rect.left}px`;
     dropdown.innerHTML = `
       <div class="filter-dropdown-header">${ui.escapeHtml(panel.title())}</div>
       <div class="filter-dropdown-content">${panel.body()}</div>
@@ -175,6 +186,8 @@ export function createFilters({ MW, state, elements, onChange }) {
       </div>`;
 
     document.body.appendChild(dropdown);
+    // Keep the panel inside a narrow popup instead of letting it overflow.
+    dropdown.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - dropdown.offsetWidth - 8))}px`;
     button.classList.add('active');
     panel.wire?.(dropdown);
 
@@ -191,53 +204,56 @@ export function createFilters({ MW, state, elements, onChange }) {
     document.addEventListener('click', outsideHandler);
   }
 
-  function updateActive() {
-    const chips = [
-      ...state.filters.tags.map(tag => ({ type: 'tag', value: tag, label: tag })),
-      ...(state.filters.timeRange
-        ? [{ type: 'time', value: 'time', label: i18n.get(timeLabel(state.filters.timeRange.type)) }]
-        : []),
-      ...state.filters.sources.map(source => ({ type: 'source', value: source, label: source }))
-    ];
-
-    const hidden = chips.length === 0;
-    elements.activeFilters.classList.toggle('hidden', hidden);
-    elements.clearFiltersBtn.classList.toggle('hidden', hidden);
-    if (hidden) {
-      elements.activeFilters.innerHTML = '';
-      return;
-    }
-
-    elements.activeFilters.innerHTML = chips.map(chip => `
-      <span class="filter-tag" data-type="${chip.type}" data-value="${ui.escapeHtml(chip.value)}">
-        ${ui.escapeHtml(chip.label)}
-        <span class="remove-filter">×</span>
-      </span>`).join('');
-
-    elements.activeFilters.querySelectorAll('.remove-filter').forEach(button => {
-      button.addEventListener('click', event => {
-        const chip = event.target.closest('.filter-tag');
-        const removals = {
-          tag: value => {
-            state.filters.tags = state.filters.tags.filter(tag => tag !== value);
-          },
-          time: () => {
-            state.filters.timeRange = null;
-          },
-          source: value => {
-            state.filters.sources = state.filters.sources.filter(source => source !== value);
-          }
-        };
-        removals[chip.dataset.type]?.(chip.dataset.value);
-        onChange();
-      });
-    });
+  function clearDimension(type) {
+    close();
+    if (type === 'tags') state.filters.tags = [];
+    else if (type === 'source') state.filters.sources = [];
+    else if (type === 'time') state.filters.timeRange = null;
+    onChange();
   }
 
-  function updateButtons() {
-    elements.filterTagsBtn.classList.toggle('active', state.filters.tags.length > 0);
-    elements.filterTimeBtn.classList.toggle('active', Boolean(state.filters.timeRange));
-    elements.filterSourceBtn.classList.toggle('active', state.filters.sources.length > 0);
+  // Capture on the button: the inline × must not also open the dropdown.
+  Object.entries(buttons).forEach(([type, button]) => {
+    button.addEventListener('click', event => {
+      if (!event.target.closest('.chip-clear')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      clearDimension(type);
+    }, true);
+  });
+
+  function shortValue(values) {
+    if (!values.length) return '';
+    return values.length === 1 ? values[0] : String(values.length);
+  }
+
+  function chipValue(type) {
+    if (type === 'tags') return shortValue(state.filters.tags);
+    if (type === 'source') return shortValue(state.filters.sources);
+    return state.filters.timeRange ? i18n.get(timeLabel(state.filters.timeRange.type)) : '';
+  }
+
+  // "The entry is the state": no second chip row, no layout jump.
+  function updateActive() {
+    Object.entries(buttons).forEach(([type, button]) => {
+      const value = chipValue(type);
+      const hasValue = Boolean(value);
+      const valueEl = button.querySelector('.chip-value');
+      const chevron = button.querySelector('.chip-chevron');
+      const clear = button.querySelector('.chip-clear');
+
+      valueEl.textContent = hasValue ? ` · ${value}` : '';
+      valueEl.classList.toggle('hidden', !hasValue);
+      chevron.classList.toggle('hidden', hasValue);
+      clear.classList.toggle('hidden', !hasValue);
+      button.classList.toggle('has-value', hasValue);
+      button.setAttribute('aria-pressed', String(hasValue));
+    });
+
+    const any = state.filters.tags.length > 0
+      || state.filters.sources.length > 0
+      || Boolean(state.filters.timeRange);
+    elements.clearFiltersBtn.classList.toggle('hidden', !any);
   }
 
   function clearAll() {
@@ -247,5 +263,5 @@ export function createFilters({ MW, state, elements, onChange }) {
     onChange();
   }
 
-  return { open, clearAll, updateActive, updateButtons };
+  return { open, clearAll, updateActive, clearDimension };
 }

@@ -108,6 +108,8 @@
     "noTagsYet": "No tags yet, tags will be created automatically when you add notes",
     "note": "Note",
     "noteNotFound": "Note not found",
+    "notesCount": "$1$ notes",
+    "notesCountOne": "1 note",
     "operationFailed": "Operation failed, please try again",
     "personalNote": "Personal note",
     "personalNoteLabel": "Personal note:",
@@ -268,6 +270,8 @@
     "noTagsYet": "暂无标签，添加笔记后会自动生成标签",
     "note": "笔记",
     "noteNotFound": "找不到指定笔记",
+    "notesCount": "$1$ 条笔记",
+    "notesCountOne": "1 条笔记",
     "operationFailed": "操作失败，请重试",
     "personalNote": "个人笔记",
     "personalNoteLabel": "个人笔记:",
@@ -676,7 +680,17 @@
     const resolved = value === 'system'
       ? (global.matchMedia?.('(prefers-color-scheme: dark)')?.matches ? 'dark' : 'light')
       : (value || DEFAULT_SETTINGS.theme);
-    document.documentElement.setAttribute('data-theme', resolved);
+    const root = global.document?.documentElement;
+    if (!root) return;
+    // One transition-free frame prevents a light flash before dark tokens land.
+    root.classList.add('theme-switch');
+    root.setAttribute('data-theme', resolved);
+    const settle = () => root.classList.remove('theme-switch');
+    if (typeof global.requestAnimationFrame === 'function') {
+      global.requestAnimationFrame(() => global.requestAnimationFrame(settle));
+    } else {
+      settle();
+    }
   }
 
   function version() {

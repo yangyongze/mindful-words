@@ -240,7 +240,7 @@ def test_selection_mode_updates_actions(page, server):
     expect(page.locator("#copy-selected-btn")).to_be_disabled()
 
 
-def test_tag_filter_and_chips(page, server):
+def test_filter_chip_carries_its_own_state(page, server):
     open_popup(page, server, sample_notes())
 
     page.locator("#filter-tags-btn").click()
@@ -249,11 +249,24 @@ def test_tag_filter_and_chips(page, server):
     page.locator(".filter-dropdown .btn-confirm").click()
 
     expect(page.locator(".note-item")).to_have_count(1)
-    expect(page.locator(".filter-tag")).to_have_count(1)
+    chip = page.locator("#filter-tags-btn")
+    assert "has-value" in chip.get_attribute("class")
+    expect(chip.locator(".chip-value")).to_contain_text("work")
+    expect(chip.locator(".chip-clear")).to_be_visible()
+    expect(chip.locator(".chip-chevron")).to_be_hidden()
+    expect(page.locator("#clear-filters-btn")).to_be_visible()
 
+    chip.locator(".chip-clear").click()
+    expect(page.locator(".note-item")).to_have_count(2)
+    assert "has-value" not in chip.get_attribute("class")
+    expect(page.locator("#clear-filters-btn")).to_be_hidden()
+
+    page.locator("#filter-tags-btn").click()
+    page.locator('.filter-dropdown input[value="work"]').check()
+    page.locator(".filter-dropdown .btn-confirm").click()
     page.locator("#clear-filters-btn").click()
     expect(page.locator(".note-item")).to_have_count(2)
-    expect(page.locator(".filter-tag")).to_have_count(0)
+    expect(page.locator("#clear-filters-btn")).to_be_hidden()
 
 
 def test_editing_a_note_sends_one_update_command(page, server):
@@ -325,10 +338,14 @@ def test_theme_variables_and_dark_setting(page, server):
       return {
         accent: styles.getPropertyValue('--accent-color').trim(),
         hover: styles.getPropertyValue('--accent-hover-color').trim(),
+        card: styles.getPropertyValue('--background-card').trim(),
+        background: styles.getPropertyValue('--background-primary').trim(),
       };
     }""")
-    assert variables["accent"] == "#0a84ff"
-    assert variables["hover"] == "#409cff"
+    assert variables["accent"] == "#7f77dd"
+    assert variables["hover"] == "#9189e8"
+    assert variables["card"] == "#2b2b31"
+    assert variables["background"] == "#1c1c1e"
 
 
 def test_storage_change_refreshes_the_list(page, server):
@@ -378,3 +395,43 @@ def test_scrolling_the_real_container_persists_the_position(page, server):
     page.wait_for_function("window.__MW_DATA__['popup_scroll_position'] > 0")
 
     assert page.evaluate("window.__MW_DATA__['popup_scroll_position']") == 50
+
+
+def test_search_matches_tags_and_source(page, server):
+    open_popup(page, server, sample_notes())
+
+    page.locator("#search-input").fill("work")
+    expect(page.locator(".note-item")).to_have_count(1)
+    expect(page.locator("#clear-search")).to_be_visible()
+
+    page.locator("#search-input").fill("example.org")
+    expect(page.locator(".note-item")).to_have_count(1)
+    expect(page.locator(".note-item").first).to_contain_text("Beta content")
+
+
+def test_header_shows_the_result_count_not_a_tagline(page, server):
+    open_popup(page, server, sample_notes())
+
+    expect(page.locator(".header-subtitle")).to_have_count(0)
+    expect(page.locator(".header-title")).to_have_count(0)
+    expect(page.locator("#results-count")).to_have_text("2 notes")
+
+    page.locator("#search-input").fill("Alpha")
+    expect(page.locator("#results-count")).to_have_text("1 note")
+
+
+def test_selection_replaces_the_workspace_without_a_height_jump(page, server):
+    open_popup(page, server, sample_notes())
+
+    header = page.locator(".header")
+    before = header.bounding_box()["height"]
+    expect(page.locator("#workspace")).to_be_visible()
+
+    page.locator("#select-btn").click()
+    expect(page.locator("#workspace")).to_be_hidden()
+    expect(page.locator("#selection-bar")).to_be_visible()
+    assert abs(header.bounding_box()["height"] - before) <= 1
+
+    page.locator("#cancel-selection-btn").click()
+    expect(page.locator("#workspace")).to_be_visible()
+    assert abs(header.bounding_box()["height"] - before) <= 1
